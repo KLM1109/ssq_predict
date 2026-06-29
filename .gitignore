@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ssq_history.csv
+ssq_report_*.txt
+.DS_Store
+.vscode/
+*.log
