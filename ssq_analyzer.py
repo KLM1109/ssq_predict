@@ -117,6 +117,32 @@ class SSQAnalyzer:
         self.calculate_frequency()
         self.calculate_omission()
 
+    def _get_recent_data(self, limit: int = 0) -> List[Dict]:
+        """获取最近N期数据，limit=0表示全部数据。"""
+        if limit <= 0:
+            return self.history_data
+        return self.history_data[-limit:]
+
+    def calculate_frequency(self, limit: int = 0) -> None:
+        self.red_freq = Counter()
+        self.blue_freq = Counter()
+        data = self._get_recent_data(limit)
+        for record in data:
+            self.red_freq.update(record["reds"])
+            self.blue_freq.update([record["blue"]])
+
+    def calculate_omission(self, limit: int = 0) -> None:
+        self.red_omission = {n: 0 for n in RED_BALLS}
+        self.blue_omission = {n: 0 for n in BLUE_BALLS}
+        data = self._get_recent_data(limit)
+        for record in data:
+            current_reds = set(record["reds"])
+            current_blue = record["blue"]
+            for n in RED_BALLS:
+                self.red_omission[n] = 0 if n in current_reds else self.red_omission[n] + 1
+            for n in BLUE_BALLS:
+                self.blue_omission[n] = 0 if n == current_blue else self.blue_omission[n] + 1
+
     @property
     def is_ready(self) -> bool:
         """分析器是否已就绪（数据加载成功）。"""
@@ -229,13 +255,13 @@ class SSQAnalyzer:
         """获取号码尾数。"""
         return ball % 10
     
-    def predict_red_balls(self, count: int = RECOMMEND_RED_COUNT) -> List[int]:
+    def predict_red_balls(self, count: int = RECOMMEND_RED_COUNT) -> Dict[str, any]:
         """基于频率统计均衡法的红球预测（算法A：标准均衡配比）。
         
         采用行业通用的3热+2温+1冷配比，结合区间、奇偶、大小均衡筛选。
         """
         if count <= 0:
-            return []
+            return {"balls": [], "reasons": {}}
         
         hot_balls = self.get_hot_red_balls(TOP_HOT)
         warm_balls = self.get_warm_red_balls()
@@ -247,10 +273,19 @@ class SSQAnalyzer:
         target_big = int(round(size_info["平均大数"]))
         
         candidates = []
+        reasons = {}
         
-        candidates.extend(hot_balls[:3])
-        candidates.extend(warm_balls[:2])
-        candidates.extend(cold_balls[:1])
+        for ball in hot_balls[:3]:
+            candidates.append(ball)
+            reasons[ball] = "热号(高频)"
+        
+        for ball in warm_balls[:2]:
+            candidates.append(ball)
+            reasons[ball] = "温号(均衡)"
+        
+        for ball in cold_balls[:1]:
+            candidates.append(ball)
+            reasons[ball] = "冷号(回补)"
         
         if len(candidates) < count:
             remaining = count - len(candidates)
@@ -258,6 +293,7 @@ class SSQAnalyzer:
             for ball in all_balls:
                 if ball not in candidates:
                     candidates.append(ball)
+                    reasons[ball] = reasons.get(ball, "补充")
                     remaining -= 1
                     if remaining <= 0:
                         break
@@ -266,6 +302,7 @@ class SSQAnalyzer:
             for ball in RED_BALLS:
                 if ball not in candidates:
                     candidates.append(ball)
+                    reasons[ball] = "补充"
                     if len(candidates) >= count:
                         break
         
@@ -273,16 +310,19 @@ class SSQAnalyzer:
         candidates = self._adjust_parity_balance(candidates, target_odd)
         candidates = self._adjust_size_balance(candidates, target_big)
         
-        return sorted(candidates[:count])
+        final_balls = sorted(candidates[:count])
+        final_reasons = {ball: reasons.get(ball, "综合") for ball in final_balls}
+        
+        return {"balls": final_balls, "reasons": final_reasons}
     
-    def predict_red_balls_advanced(self, count: int = RECOMMEND_RED_COUNT, exclude_balls: List[int] = None) -> List[int]:
+    def predict_red_balls_advanced(self, count: int = RECOMMEND_RED_COUNT, exclude_balls: List[int] = None) -> Dict[str, any]:
         """基于多维指标共振模型的红球预测（算法B：冷号+高遗漏偏好）。
         
         采用区间均衡选择、余数分类法、尾数关联法等多维度交叉验证。
         与算法A形成互补，优先选择冷号和高遗漏号码，尽量避开算法A选中的号码。
         """
         if count <= 0:
-            return []
+            return {"balls": [], "reasons": {}}
         
         exclude_set = set(exclude_balls) if exclude_balls else set()
         
@@ -300,42 +340,53 @@ class SSQAnalyzer:
             recent_reds.update(rec.get("reds", []))
         
         candidates_by_interval = {1: [], 2: [], 3: []}
+        ball_reasons = {}
         
         for ball in RED_BALLS:
             if ball in exclude_set:
                 continue
             
             score = 0
+            reason_list = []
             interval = self._get_interval(ball)
             
             if ball in recent_reds:
                 score -= 15
+            else:
+                reason_list.append("非近期")
             
             mod = ball % 3
             if mod3_counts.get(mod, 0) < 2:
                 score += 25
+                reason_list.append("余{}回补".format(mod))
             
             tail = ball % 10
             if tail_counts.get(tail, 0) == 0:
                 score += 20
+                reason_list.append("尾{}冷".format(tail))
             
             if interval_counts.get(interval, 0) <= 1:
                 score += 20
+                reason_list.append("区间{}缺".format(interval))
             
             omission = self.red_omission.get(ball, 0)
             if omission >= 10:
                 score += omission * 4
+                reason_list.append("高遗漏({}期)".format(omission))
             elif omission >= 6:
                 score += omission * 3
-            elif omission >= 3:
-                score += omission * 2
+                reason_list.append("遗漏({}期)".format(omission))
             
             freq = self.red_freq.get(ball, 0)
             if freq <= 1:
                 score += 20
+                reason_list.append("冷号")
             elif freq <= 2:
                 score += 10
+                reason_list.append("温号")
             
+            if reason_list:
+                ball_reasons[ball] = ",".join(reason_list[:3])
             candidates_by_interval[interval].append((ball, score))
         
         for interval in [1, 2, 3]:
@@ -384,7 +435,10 @@ class SSQAnalyzer:
         selected = self._adjust_parity_balance(selected, target_odd)
         selected = self._adjust_size_balance(selected, target_big)
         
-        return sorted(selected[:count])
+        final_balls = sorted(selected[:count])
+        final_reasons = {ball: ball_reasons.get(ball, "综合") for ball in final_balls}
+        
+        return {"balls": final_balls, "reasons": final_reasons}
     
     def _analyze_mod3(self) -> Dict[int, int]:
         """分析近10期红球除3余数分布。"""

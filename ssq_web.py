@@ -57,23 +57,28 @@ HTML_TEMPLATE = """
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; color: #333; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .header h1 { font-size: 2rem; color: #333; margin-bottom: 8px; font-weight: 600; }
-        .header p { font-size: 1rem; color: #666; }
-        .stats-bar { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
-        .stat-card { background: white; padding: 12px 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; border-left: 4px solid #e74c3c; }
-        .stat-card:nth-child(2) { border-left-color: #3498db; }
-        .stat-card:nth-child(3) { border-left-color: #2ecc71; }
-        .stat-card .label { font-size: 0.85rem; color: #888; margin-bottom: 4px; }
-        .stat-card .value { font-size: 1.5rem; font-weight: 600; color: #333; }
-        .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        .tab { background: white; border: 1px solid #ddd; padding: 10px 22px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; color: #666; }
-        .tab:hover { background: #f8f9fa; border-color: #ccc; }
-        .tab.active { background: #e74c3c; color: white; border-color: #e74c3c; }
-        .content { background: white; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); padding: 25px; min-height: 500px; }
-        .section { display: none; }
-        .section.active { display: block; }
+        .container { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: white; border-bottom: 1px solid #eee; }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .header-left h1 { font-size: 1.5rem; color: #333; font-weight: 600; }
+        .header-right { display: flex; gap: 20px; align-items: center; }
+        .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
+        .stat-item .label { font-size: 0.75rem; color: #888; }
+        .stat-item .value { font-size: 1rem; font-weight: 600; color: #333; }
+        .stat-item .value.red { color: #e74c3c; }
+        .stat-item .value.blue { color: #3498db; }
+        .stat-item .value.green { color: #2ecc71; }
+        .tabs { display: flex; gap: 0; background: white; border-bottom: 1px solid #eee; }
+        .tab { flex: 1; max-width: 150px; background: transparent; border: none; border-bottom: 2px solid transparent; padding: 12px 20px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; color: #666; }
+        .tab:hover { background: #f8f9fa; }
+        .tab.active { border-bottom-color: #e74c3c; color: #e74c3c; font-weight: 500; }
+        .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .section { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+        .section.active { display: flex; }
+        .section.row-layout { flex-direction: row; }
+        .main-content { display: flex; flex: 1; overflow: hidden; }
+        .predict-panel { flex: 1; padding: 20px; overflow-y: auto; border-right: 1px solid #eee; }
+        .analysis-panel { flex: 1; padding: 20px; overflow-y: auto; }
         .btn { background: #e74c3c; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn:hover { background: #c0392b; }
         .btn-secondary { background: #f0f0f0; color: #333; border: 1px solid #ddd; }
@@ -90,19 +95,49 @@ HTML_TEMPLATE = """
         .ball.inactive { background: #e0e0e0; color: #999; }
         .prediction-section { background: #fafafa; padding: 18px; border-radius: 8px; margin-bottom: 18px; }
         .prediction-title { font-size: 1.15rem; font-weight: 600; color: #333; margin-bottom: 12px; }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 15px; }
-        .feature-card { background: #fff; padding: 12px; border-radius: 6px; border-left: 3px solid #e74c3c; }
-        .feature-card .title { font-size: 0.85rem; color: #888; margin-bottom: 4px; }
-        .feature-card .value { font-size: 1.2rem; font-weight: 600; color: #333; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+        .feature-card { background: #fff; padding: 10px; border-radius: 6px; border-left: 3px solid #e74c3c; }
+        .feature-card .title { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+        .feature-card .value { font-size: 1.1rem; font-weight: 600; color: #333; }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
         th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #eee; }
         th { background: #f8f9fa; font-weight: 600; color: #666; font-size: 0.8rem; }
         tr:hover { background: #fafafa; }
-        .search-box { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
-        .search-box input { flex: 1; min-width: 180px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+        .search-box { display: flex; gap: 8px; flex-wrap: wrap; }
+        .search-box input { flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
         .search-box input:focus { outline: none; border-color: #e74c3c; }
-        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
+        .history-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .history-main { display: flex; gap: 15px; }
+        #historyContent { width: 60%; }
+        #historyAnalysis { width: 40%; }
+        .btn.active { background: #e74c3c; color: white; border-color: #e74c3c; }
+        .btn-period-10.active { background: #27ae60; border-color: #27ae60; }
+        .btn-period-30.active { background: #3498db; border-color: #3498db; }
+        .btn-period-50.active { background: #9b59b6; border-color: #9b59b6; }
+        .btn-period-all.active { background: #e74c3c; border-color: #e74c3c; }
+        .trend-container { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+        .trend-header-row { display: flex; background: #f8f9fa; border-bottom: 1px solid #ddd; }
+        .trend-header-row .trend-cell { font-weight: 600; font-size: 0.6rem; color: #666; }
+        .trend-row { display: flex; border-bottom: 1px solid #f0f0f0; }
+        .trend-row:last-child { border-bottom: none; }
+        .trend-period { width: 90px; padding: 6px 8px; text-align: right; font-size: 0.75rem; color: #333; border-right: 1px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .trend-red-area { flex: 33; display: flex; }
+        .trend-blue-area { flex: 16; display: flex; border-left: 1px solid #eee; }
+        .trend-cell { flex: 1; min-width: 24px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; border-right: 1px solid #f5f5f5; }
+        .trend-cell:last-child { border-right: none; }
+        .trend-cell.red { background: #e74c3c; color: white; font-weight: bold; border-radius: 4px; margin: 2px; }
+        .trend-cell.blue { background: #3498db; color: white; font-weight: bold; border-radius: 4px; margin: 2px; }
+        .trend-stats-container { display: flex; gap: 15px; margin-top: 15px; }
+        .trend-stats { flex: 1; padding: 10px; background: #fafafa; border-radius: 6px; }
+        .trend-stats h4 { font-size: 0.85rem; margin-bottom: 8px; color: #333; }
+        .stats-row { display: flex; align-items: flex-end; gap: 1px; height: 60px; padding: 0 3px; }
+        .stats-bar { flex: 1; background: #e74c3c; min-height: 4px; border-radius: 2px 2px 0 0; position: relative; }
+        .stats-bar.blue { background: #3498db; }
+        .stats-bar span { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; color: #333; font-weight: 600; white-space: nowrap; }
+        .stats-labels { display: flex; gap: 1px; margin-top: 3px; }
+        .stats-label { flex: 1; text-align: center; font-size: 0.5rem; color: #666; }
+        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 15px; }
         .analysis-card { background: #fafafa; padding: 15px; border-radius: 8px; }
         .analysis-card h3 { font-size: 1rem; margin-bottom: 12px; color: #333; font-weight: 600; }
         .analysis-list { list-style: none; }
@@ -133,127 +168,100 @@ HTML_TEMPLATE = """
         .number-grid { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
         .blue-grid .number-grid { grid-template-columns: repeat(4, 1fr); }
         .number-grid .ball { width: 100%; padding: 6px 0; font-size: 0.85rem; border-radius: 4px; }
-        .history-info { margin-bottom: 15px; padding: 10px; background: #fafafa; border-radius: 6px; }
-        .history-info span { margin-right: 20px; font-size: 0.95rem; }
-        .history-info .period { font-weight: 600; color: #e74c3c; }
-        .history-info .date { color: #666; }
         .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
         .pagination button { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
         .pagination button:hover { background: #f8f9fa; }
         .pagination button.active { background: #e74c3c; color: white; border-color: #e74c3c; }
+        .slider-section { margin-bottom: 15px; }
+        .slider-section label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 5px; }
+        .slider-section input[type="range"] { width: 100%; }
+        .slider-section .hint { font-size: 0.75rem; color: #999; }
+        @media (max-width: 768px) {
+            .main-content { flex-direction: column; }
+            .predict-panel { border-right: none; border-bottom: 1px solid #eee; }
+            .header { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: space-between; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>双色球数据分析系统</h1>
-            <p>历史数据查询与统计分析</p>
-        </div>
-        
-        <div class="stats-bar" id="statsBar">
-            <div class="stat-card">
-                <div class="label">数据总量</div>
-                <div class="value" id="totalCount">--</div>
+            <div class="header-left">
+                <h1>双色球数据分析系统</h1>
             </div>
-            <div class="stat-card">
-                <div class="label">最新期号</div>
-                <div class="value" id="latestPeriod">--</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">最近更新</div>
-                <div class="value" id="lastUpdate">--</div>
+            <div class="header-right">
+                <div class="stat-item">
+                    <span class="label">数据总量</span>
+                    <span class="value green" id="totalCount">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">最新期号</span>
+                    <span class="value red" id="latestPeriod">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">最近更新</span>
+                    <span class="value blue" id="lastUpdate">--</span>
+                </div>
             </div>
         </div>
 
         <div class="tabs">
             <button class="tab active" onclick="showTab('predict')">号码预测</button>
             <button class="tab" onclick="showTab('history')">历史数据</button>
-            <button class="tab" onclick="showTab('analysis')">数据分析</button>
             <button class="tab" onclick="showTab('update')">数据更新</button>
         </div>
 
         <div class="content">
-            <div class="section active" id="predict">
-                <div class="btn-group">
-                    <button class="btn" onclick="doPredict()">
-                        <span class="loading" id="predictLoading" style="display:none;"></span>
-                        生成预测
-                    </button>
-                    <button class="btn btn-secondary" onclick="refreshData()">
-                        刷新数据
-                    </button>
-                </div>
-                
-                <div id="predictionResult"></div>
-                
-                <div id="customPredictSection" style="margin-top:30px;">
-                    <h3 style="font-size:1.15rem;color:#333;margin-bottom:20px;">动态预测</h3>
-                    <p style="font-size:0.85rem;color:#666;margin-bottom:15px;">拖动下方滑动条调整算法参数，实时查看预测结果变化</p>
-                    
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;margin-bottom:20px;">
-                        <div>
-                            <label style="display:block;font-size:0.85rem;color:#555;margin-bottom:5px;">热号权重: <span id="hotVal">1.0</span></label>
-                            <input type="range" id="hotSlider" min="0" max="3" step="0.1" value="1.0" oninput="updateSliderVal('hot', this.value); doCustomPredict()">
-                            <div style="font-size:0.75rem;color:#999;margin-top:3px;">0=不考虑热号, 3=强热号偏好</div>
+            <div class="section active row-layout" id="predict">
+                <div class="main-content">
+                    <div class="predict-panel">
+                        <div class="btn-group">
+                            <button class="btn" onclick="doPredict()">
+                                <span class="loading" id="predictLoading" style="display:none;"></span>
+                                生成预测
+                            </button>
+                            <button class="btn btn-secondary" onclick="refreshData()">
+                                刷新数据
+                            </button>
+                            
+                            <button class="btn btn-secondary btn-period-10" onclick="selectPeriod(10)">近10期</button>
+                            <button class="btn btn-secondary btn-period-30" onclick="selectPeriod(30)">近30期</button>
+                            <button class="btn btn-secondary btn-period-50" onclick="selectPeriod(50)">近50期</button>
+                            <button class="btn btn-secondary btn-period-all" onclick="selectPeriod(0)">全部数据</button>
                         </div>
-                        <div>
-                            <label style="display:block;font-size:0.85rem;color:#555;margin-bottom:5px;">冷号权重: <span id="coldVal">1.0</span></label>
-                            <input type="range" id="coldSlider" min="0" max="3" step="0.1" value="1.0" oninput="updateSliderVal('cold', this.value); doCustomPredict()">
-                            <div style="font-size:0.75rem;color:#999;margin-top:3px;">0=不考虑冷号, 3=强冷号偏好</div>
-                        </div>
-                        <div>
-                            <label style="display:block;font-size:0.85rem;color:#555;margin-bottom:5px;">遗漏值权重: <span id="omissionVal">1.0</span></label>
-                            <input type="range" id="omissionSlider" min="0" max="3" step="0.1" value="1.0" oninput="updateSliderVal('omission', this.value); doCustomPredict()">
-                            <div style="font-size:0.75rem;color:#999;margin-top:3px;">0=不考虑遗漏, 3=强遗漏偏好</div>
-                        </div>
-                        <div>
-                            <label style="display:block;font-size:0.85rem;color:#555;margin-bottom:5px;">区间均衡权重: <span id="intervalVal">1.0</span></label>
-                            <input type="range" id="intervalSlider" min="0" max="2" step="0.1" value="1.0" oninput="updateSliderVal('interval', this.value); doCustomPredict()">
-                            <div style="font-size:0.75rem;color:#999;margin-top:3px;">0=随机区间, 2=严格均衡</div>
-                        </div>
-                        <div>
-                            <label style="display:block;font-size:0.85rem;color:#555;margin-bottom:5px;">奇偶均衡权重: <span id="parityVal">1.0</span></label>
-                            <input type="range" id="paritySlider" min="0" max="2" step="0.1" value="1.0" oninput="updateSliderVal('parity', this.value); doCustomPredict()">
-                            <div style="font-size:0.75rem;color:#999;margin-top:3px;">0=随机奇偶, 2=严格均衡</div>
-                        </div>
-                        <div>
-                            <label style="display:block;font-size:0.85rem;color:#555;margin-bottom:5px;">大小均衡权重: <span id="sizeVal">1.0</span></label>
-                            <input type="range" id="sizeSlider" min="0" max="2" step="0.1" value="1.0" oninput="updateSliderVal('size', this.value); doCustomPredict()">
-                            <div style="font-size:0.75rem;color:#999;margin-top:3px;">0=随机大小, 2=严格均衡</div>
-                        </div>
+                        
+                        <div id="predictionResult"></div>
                     </div>
                     
-                    <button class="btn btn-secondary" onclick="resetSliders()">重置参数</button>
-                    <button class="btn" onclick="doCustomPredict()">应用参数</button>
-                    
-                    <div id="customResult" style="margin-top:20px;"></div>
+                    <div class="analysis-panel">
+                        <div class="btn-group">
+                            <button class="btn btn-secondary btn-period-10" onclick="selectPeriod(10)">近10期</button>
+                            <button class="btn btn-secondary btn-period-30" onclick="selectPeriod(30)">近30期</button>
+                            <button class="btn btn-secondary btn-period-50" onclick="selectPeriod(50)">近50期</button>
+                            <button class="btn btn-secondary btn-period-all" onclick="selectPeriod(0)">全部数据</button>
+                        </div>
+                        
+                        <div id="analysisLoading" style="display:none;color:#3498db;font-size:0.85rem;margin-top:10px;">加载中...</div>
+                        <div id="analysisContent"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="section" id="history">
-                <div class="search-box">
-                    <input type="text" id="searchPeriod" placeholder="搜索期号（如2026068）" onkeyup="if(event.key==='Enter') searchHistory()">
+                <div class="history-header">
+                    <input type="text" id="searchPeriod" placeholder="搜索期号（如2026068）" onkeyup="if(event.key==='Enter') searchHistory()" style="flex:1;min-width:180px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;">
                     <button class="btn" onclick="searchHistory()">搜索</button>
                     <button class="btn btn-secondary" onclick="clearSearch()">清空</button>
-                </div>
-                <div class="btn-group">
                     <button class="btn btn-secondary" onclick="showHistory(10)">最近10期</button>
                     <button class="btn btn-secondary" onclick="showHistory(20)">最近20期</button>
                     <button class="btn btn-secondary" onclick="showHistory(50)">最近50期</button>
                     <button class="btn btn-secondary" onclick="showHistory(0)">全部数据</button>
                 </div>
-                <div id="historyContent"></div>
-            </div>
-
-            <div class="section" id="analysis">
-                <div class="btn-group">
-                    <button class="btn" onclick="loadAnalysis()">
-                        <span class="loading" id="analysisLoading" style="display:none;"></span>
-                        加载分析数据
-                    </button>
+                <div class="history-main">
+                    <div id="historyContent"></div>
+                    <div id="historyAnalysis"></div>
                 </div>
-                
-                <div id="analysisContent"></div>
             </div>
 
             <div class="section" id="update">
@@ -297,9 +305,11 @@ HTML_TEMPLATE = """
             event.target.classList.add('active');
             document.getElementById(tabName).classList.add('active');
             
-            if (tabName === 'predict') loadPrediction();
+            if (tabName === 'predict') {
+                loadPrediction();
+                loadAnalysis();
+            }
             if (tabName === 'history') showHistory(10);
-            if (tabName === 'analysis') loadAnalysis();
             refreshStats();
         }
 
@@ -314,8 +324,9 @@ HTML_TEMPLATE = """
                 .catch(e => console.error(e));
         }
 
-        function loadPrediction() {
-            fetch('/api/predict?' + Date.now())
+        function loadPrediction(limit=0) {
+            let url = limit > 0 ? `/api/predict?limit=${limit}&` : '/api/predict?';
+            fetch(url + Date.now())
                 .then(r => r.json())
                 .then(data => {
                     if (!data.success) {
@@ -325,14 +336,26 @@ HTML_TEMPLATE = """
                     }
                     
                     function buildPredictionSection(pred) {
-                        let redBalls = pred.red_balls.map(b => 
-                            `<span class="ball red">${b.toString().padStart(2, '0')}</span>`
-                        ).join('');
+                        let redReasons = pred.red_reasons || {};
+                        let redBalls = pred.red_balls.map(b => {
+                            let reason = redReasons[b] || '';
+                            return `<span class="ball red" title="${reason}">${b.toString().padStart(2, '0')}</span>`;
+                        }).join('');
                         let blueBalls = `<span class="ball blue">${pred.blue_ball.toString().padStart(2, '0')}</span>`;
                         let blueOptions = pred.blue_options.slice(1).map(b => 
                             `<span class="ball blue small">${b.toString().padStart(2, '0')}</span>`
                         ).join('');
                         let features = pred.features;
+                        
+                        let reasonHtml = '';
+                        if (redReasons && Object.keys(redReasons).length > 0) {
+                            reasonHtml = '<div style="font-size:0.75rem;color:#888;margin-top:8px;">';
+                            pred.red_balls.forEach(b => {
+                                let reason = redReasons[b] || '综合';
+                                reasonHtml += `<span style="margin-right:8px;">${b.toString().padStart(2, '0')}: ${reason}</span>`;
+                            });
+                            reasonHtml += '</div>';
+                        }
                         
                         let featureHtml = `
                             <div class="feature-grid">
@@ -358,6 +381,7 @@ HTML_TEMPLATE = """
                                 <div style="margin-bottom:15px;">
                                     <strong>预测红球：</strong>
                                     <div class="ball-grid">${redBalls}</div>
+                                    ${reasonHtml}
                                 </div>
                                 <div>
                                     <strong>预测蓝球：</strong>
@@ -418,10 +442,30 @@ HTML_TEMPLATE = """
                 });
         }
 
-        function doPredict() {
+        function selectPeriod(limit) {
+            document.querySelectorAll('.btn-period-10').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.btn-period-30').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.btn-period-50').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.btn-period-all').forEach(b => b.classList.remove('active'));
+            
+            if (limit === 10) {
+                document.querySelectorAll('.btn-period-10').forEach(b => b.classList.add('active'));
+            } else if (limit === 30) {
+                document.querySelectorAll('.btn-period-30').forEach(b => b.classList.add('active'));
+            } else if (limit === 50) {
+                document.querySelectorAll('.btn-period-50').forEach(b => b.classList.add('active'));
+            } else {
+                document.querySelectorAll('.btn-period-all').forEach(b => b.classList.add('active'));
+            }
+            
+            doPredict(limit);
+            loadAnalysis(limit);
+        }
+
+        function doPredict(limit=0) {
             let loading = document.getElementById('predictLoading');
             loading.style.display = 'inline-block';
-            loadPrediction();
+            loadPrediction(limit);
             setTimeout(() => loading.style.display = 'none', 500);
         }
 
@@ -437,44 +481,163 @@ HTML_TEMPLATE = """
                     }
                     
                     let records = data.records;
-                    let html = '';
+                    let html = '<div class="trend-container">';
                     
-                    records.forEach((rec, index) => {
+                    html += '<div class="trend-header-row">';
+                    html += '<div class="trend-period">期号</div>';
+                    html += '<div class="trend-red-area">';
+                    for (let i = 1; i <= 33; i++) {
+                        html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="trend-blue-area">';
+                    for (let i = 1; i <= 16; i++) {
+                        html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    records.forEach(rec => {
                         let redSet = new Set(rec.reds);
-                        let redHtml = '';
+                        html += '<div class="trend-row">';
+                        html += `<div class="trend-period">${rec.period}</div>`;
+                        html += '<div class="trend-red-area">';
                         for (let i = 1; i <= 33; i++) {
-                            let cls = redSet.has(i) ? 'red' : 'inactive';
-                            redHtml += `<div class="ball ${cls} tiny">${i.toString().padStart(2, '0')}</div>`;
+                            let cls = redSet.has(i) ? 'red' : '';
+                            html += `<div class="trend-cell ${cls}">${redSet.has(i) ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        
-                        let blueHtml = '';
+                        html += '</div>';
+                        html += '<div class="trend-blue-area">';
                         for (let i = 1; i <= 16; i++) {
-                            let cls = i === rec.blue ? 'blue' : 'inactive';
-                            blueHtml += `<div class="ball ${cls} tiny">${i.toString().padStart(2, '0')}</div>`;
+                            let cls = i === rec.blue ? 'blue' : '';
+                            html += `<div class="trend-cell ${cls}">${i === rec.blue ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        
-                        html += `
-                            <div class="history-info">
-                                <span class="period">期号: ${rec.period}</span>
-                                <span class="date">日期: ${rec.date}</span>
-                                <span>红球: ${rec.reds.map(r => r.toString().padStart(2, '0')).join(', ')}</span>
-                                <span>蓝球: ${rec.blue.toString().padStart(2, '0')}</span>
-                            </div>
-                            <div style="display:flex;gap:20px;margin-bottom:15px;">
-                                <div>
-                                    <div style="font-size:0.8rem;color:#666;margin-bottom:3px;">红球 (1-33)</div>
-                                    <div style="display:flex;gap:1px;flex-wrap:wrap;">${redHtml}</div>
-                                </div>
-                                <div>
-                                    <div style="font-size:0.8rem;color:#666;margin-bottom:3px;">蓝球 (1-16)</div>
-                                    <div style="display:flex;gap:1px;">${blueHtml}</div>
-                                </div>
-                            </div>
-                            ${index < records.length - 1 ? '<hr style="border:none;border-top:1px dashed #ddd;margin:15px 0;">' : ''}
-                        `;
+                        html += '</div>';
+                        html += '</div>';
                     });
+                    
+                    html += '</div>';
+                    
+                    let redFreq = new Array(34).fill(0);
+                    let blueFreq = new Array(17).fill(0);
+                    records.forEach(rec => {
+                        rec.reds.forEach(r => redFreq[r]++);
+                        blueFreq[rec.blue]++;
+                    });
+                    
+                    html += '<div class="trend-stats-container">';
+                    
+                    html += '<div class="trend-stats">';
+                    html += '<h4>红球出现次数统计</h4>';
+                    html += '<div class="stats-row">';
+                    for (let i = 1; i <= 33; i++) {
+                        let height = Math.max(4, (redFreq[i] / records.length) * 100);
+                        html += `<div class="stats-bar" style="height:${height}%;"><span>${redFreq[i]}</span></div>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="stats-labels">';
+                    for (let i = 1; i <= 33; i++) {
+                        html += `<div class="stats-label">${i}</div>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    html += '<div class="trend-stats">';
+                    html += '<h4>蓝球出现次数统计</h4>';
+                    html += '<div class="stats-row">';
+                    for (let i = 1; i <= 16; i++) {
+                        let height = Math.max(4, (blueFreq[i] / records.length) * 100);
+                        html += `<div class="stats-bar blue" style="height:${height}%;"><span>${blueFreq[i]}</span></div>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="stats-labels">';
+                    for (let i = 1; i <= 16; i++) {
+                        html += `<div class="stats-label">${i}</div>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    html += '</div>';
 
                     document.getElementById('historyContent').innerHTML = html;
+                    
+                    let analysisUrl = limit > 0 ? `/api/analysis?limit=${limit}` : '/api/analysis';
+                    fetch(analysisUrl)
+                        .then(r => r.json())
+                        .then(analysisData => {
+                            if (!analysisData.success) {
+                                document.getElementById('historyAnalysis').innerHTML = '';
+                                return;
+                            }
+                            
+                            let hotReds = analysisData.hot_reds.map((b, i) => 
+                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">${i + 1}位</span></li>`
+                            ).join('');
+                            
+                            let coldReds = analysisData.cold_reds.map((b, i) => 
+                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">${i + 1}位</span></li>`
+                            ).join('');
+                            
+                            let hotBlues = analysisData.hot_blues.map((b, i) => 
+                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">${i + 1}位</span></li>`
+                            ).join('');
+                            
+                            let coldBlues = analysisData.cold_blues.map((b, i) => 
+                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">${i + 1}位</span></li>`
+                            ).join('');
+                            
+                            let highOmissionReds = analysisData.high_omission_reds.map((b, i) => 
+                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count">${analysisData.red_omission[b]}期</span></li>`
+                            ).join('');
+                            
+                            let highOmissionBlues = analysisData.high_omission_blues.map((b, i) => 
+                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count">${analysisData.blue_omission[b]}期</span></li>`
+                            ).join('');
+                            
+                            let intervalDist = analysisData.interval_distribution;
+                            let parityDist = analysisData.parity_distribution;
+                            let sizeDist = analysisData.size_distribution;
+                            
+                            let analysisHtml = `
+                                <div class="analysis-grid" style="gap:10px;">
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">热号排行</h3>
+                                        <ul class="analysis-list" style="font-size:0.8rem;">${hotReds}</ul>
+                                    </div>
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">冷号排行</h3>
+                                        <ul class="analysis-list" style="font-size:0.8rem;">${coldReds}</ul>
+                                    </div>
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">高遗漏红球</h3>
+                                        <ul class="analysis-list" style="font-size:0.8rem;">${highOmissionReds}</ul>
+                                    </div>
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">高遗漏蓝球</h3>
+                                        <ul class="analysis-list" style="font-size:0.8rem;">${highOmissionBlues}</ul>
+                                    </div>
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">区间分布</h3>
+                                        <div style="font-size:0.8rem;">一区: ${intervalDist[1]} 二区: ${intervalDist[2]} 三区: ${intervalDist[3]}</div>
+                                    </div>
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">奇偶分布</h3>
+                                        <div style="font-size:0.8rem;">奇数: ${parityDist['奇数']} 偶数: ${parityDist['偶数']}</div>
+                                    </div>
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">大小分布</h3>
+                                        <div style="font-size:0.8rem;">大数: ${sizeDist['大数']} 小数: ${sizeDist['小数']}</div>
+                                    </div>
+                                    <div class="analysis-card" style="padding:12px;">
+                                        <h3 style="font-size:0.9rem;margin-bottom:8px;">蓝球冷热</h3>
+                                        <div style="font-size:0.8rem;margin-bottom:6px;">热号: ${analysisData.hot_blues.join(', ')}</div>
+                                        <div style="font-size:0.8rem;">冷号: ${analysisData.cold_blues.join(', ')}</div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            document.getElementById('historyAnalysis').innerHTML = analysisHtml;
+                        });
                 });
         }
 
@@ -492,43 +655,43 @@ HTML_TEMPLATE = """
                     }
                     
                     let records = data.records;
-                    let html = '';
+                    let html = '<div class="trend-container">';
                     
-                    records.forEach((rec, index) => {
+                    html += '<div class="trend-header-row">';
+                    html += '<div class="trend-period">期号</div>';
+                    html += '<div class="trend-red-area">';
+                    for (let i = 1; i <= 33; i++) {
+                        html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="trend-blue-area">';
+                    for (let i = 1; i <= 16; i++) {
+                        html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    records.forEach(rec => {
                         let redSet = new Set(rec.reds);
-                        let redHtml = '';
+                        html += '<div class="trend-row">';
+                        html += `<div class="trend-period">${rec.period}</div>`;
+                        html += '<div class="trend-red-area">';
                         for (let i = 1; i <= 33; i++) {
-                            let cls = redSet.has(i) ? 'red' : 'inactive';
-                            redHtml += `<div class="ball ${cls} tiny">${i.toString().padStart(2, '0')}</div>`;
+                            let cls = redSet.has(i) ? 'red' : '';
+                            html += `<div class="trend-cell ${cls}">${redSet.has(i) ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        
-                        let blueHtml = '';
+                        html += '</div>';
+                        html += '<div class="trend-blue-area">';
                         for (let i = 1; i <= 16; i++) {
-                            let cls = i === rec.blue ? 'blue' : 'inactive';
-                            blueHtml += `<div class="ball ${cls} tiny">${i.toString().padStart(2, '0')}</div>`;
+                            let cls = i === rec.blue ? 'blue' : '';
+                            html += `<div class="trend-cell ${cls}">${i === rec.blue ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        
-                        html += `
-                            <div class="history-info">
-                                <span class="period">期号: ${rec.period}</span>
-                                <span class="date">日期: ${rec.date}</span>
-                                <span>红球: ${rec.reds.map(r => r.toString().padStart(2, '0')).join(', ')}</span>
-                                <span>蓝球: ${rec.blue.toString().padStart(2, '0')}</span>
-                            </div>
-                            <div style="display:flex;gap:20px;margin-bottom:15px;">
-                                <div>
-                                    <div style="font-size:0.8rem;color:#666;margin-bottom:3px;">红球 (1-33)</div>
-                                    <div style="display:flex;gap:1px;flex-wrap:wrap;">${redHtml}</div>
-                                </div>
-                                <div>
-                                    <div style="font-size:0.8rem;color:#666;margin-bottom:3px;">蓝球 (1-16)</div>
-                                    <div style="display:flex;gap:1px;">${blueHtml}</div>
-                                </div>
-                            </div>
-                            ${index < records.length - 1 ? '<hr style="border:none;border-top:1px dashed #ddd;margin:15px 0;">' : ''}
-                        `;
+                        html += '</div>';
+                        html += '</div>';
                     });
-
+                    
+                    html += '</div>';
+                    
                     document.getElementById('historyContent').innerHTML = html;
                 });
         }
@@ -538,11 +701,12 @@ HTML_TEMPLATE = """
             showHistory(10);
         }
 
-        function loadAnalysis() {
+        function loadAnalysis(limit=0) {
             let loading = document.getElementById('analysisLoading');
             loading.style.display = 'inline-block';
             
-            fetch('/api/analysis')
+            let url = limit > 0 ? `/api/analysis?limit=${limit}` : '/api/analysis';
+            fetch(url)
                 .then(r => r.json())
                 .then(data => {
                     loading.style.display = 'none';
@@ -836,6 +1000,7 @@ HTML_TEMPLATE = """
         window.onload = function() {
             refreshStats();
             loadPrediction();
+            loadAnalysis();
         };
     </script>
 </body>
@@ -845,7 +1010,11 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def index():
-    return render_template_string(HTML_TEMPLATE)
+    response = make_response(render_template_string(HTML_TEMPLATE))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 
 @app.route('/api/stats')
@@ -873,16 +1042,24 @@ def api_stats():
 
 @app.route('/api/predict')
 def api_predict():
+    limit = int(request.args.get('limit', 0))
     analyzer = get_analyzer()
     if not analyzer.is_ready:
         return json_response({"success": False, "message": "数据加载失败，请检查数据文件"})
     
-    red_balls_a = analyzer.predict_red_balls()
+    analyzer.calculate_frequency(limit)
+    analyzer.calculate_omission(limit)
+    
+    result_a = analyzer.predict_red_balls()
+    red_balls_a = result_a["balls"]
+    red_reasons_a = result_a["reasons"]
     blue_ball_a = analyzer.predict_blue_ball()
     blue_options_a = analyzer.predict_blue_options(5)
     features_a = analyzer.analyze_prediction_features(red_balls_a, blue_ball_a)
     
-    red_balls_b = analyzer.predict_red_balls_advanced(exclude_balls=red_balls_a)
+    result_b = analyzer.predict_red_balls_advanced(exclude_balls=red_balls_a)
+    red_balls_b = result_b["balls"]
+    red_reasons_b = result_b["reasons"]
     blue_ball_b = analyzer.predict_blue_ball_advanced(exclude_ball=blue_ball_a)
     blue_options_b = analyzer.predict_blue_options(5)
     features_b = analyzer.analyze_prediction_features(red_balls_b, blue_ball_b)
@@ -891,10 +1068,12 @@ def api_predict():
     
     return json_response({
         "success": True,
+        "limit": limit,
         "prediction_a": {
             "name": "算法A：频率统计均衡法",
             "description": "采用行业通用的3热+2温+1冷配比，结合区间、奇偶、大小均衡筛选，避免极端组合",
             "red_balls": red_balls_a,
+            "red_reasons": red_reasons_a,
             "blue_ball": blue_ball_a,
             "blue_options": blue_options_a,
             "features": features_a
@@ -903,6 +1082,7 @@ def api_predict():
             "name": "算法B：多维指标共振法",
             "description": "采用余数分类法（除3余数）、尾数关联法、区间回补法等多维度交叉验证，优先选择冷号和高遗漏号码",
             "red_balls": red_balls_b,
+            "red_reasons": red_reasons_b,
             "blue_ball": blue_ball_b,
             "blue_options": blue_options_b,
             "features": features_b
@@ -991,9 +1171,13 @@ def api_search():
 
 @app.route('/api/analysis')
 def api_analysis():
+    limit = int(request.args.get('limit', 0))
     analyzer = get_analyzer()
     if not analyzer.is_ready:
         return json_response({"success": False, "message": "数据加载失败"})
+    
+    analyzer.calculate_frequency(limit)
+    analyzer.calculate_omission(limit)
     
     interval = analyzer.analyze_interval()
     interval_data = {}
