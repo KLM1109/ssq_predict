@@ -392,7 +392,7 @@ class SSQAnalyzer:
             candidates_by_interval[interval].append((ball, score))
         
         for interval in [1, 2, 3]:
-            candidates_by_interval[interval].sort(key=lambda x: -x[1])
+            candidates_by_interval[interval].sort(key=lambda x: (-x[1], x[0]))
         
         selected = []
         selected_set = set()
@@ -622,7 +622,7 @@ class SSQAnalyzer:
             
             candidates.append((ball, score))
         
-        candidates.sort(key=lambda x: -x[1])
+        candidates.sort(key=lambda x: (-x[1], x[0]))
         
         if candidates:
             return candidates[0][0]
@@ -708,7 +708,7 @@ class SSQAnalyzer:
             
             candidates.append((ball, score))
         
-        candidates.sort(key=lambda x: -x[1])
+        candidates.sort(key=lambda x: (-x[1], x[0]))
         
         if candidates:
             return candidates[0][0]
