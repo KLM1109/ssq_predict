@@ -255,13 +255,13 @@ class SSQAnalyzer:
         """获取号码尾数。"""
         return ball % 10
     
-    def predict_red_balls(self, count: int = RECOMMEND_RED_COUNT) -> Dict[str, any]:
+    def predict_red_balls(self, count: int = RECOMMEND_RED_COUNT, return_dict: bool = False) -> any:
         """基于频率统计均衡法的红球预测（算法A：标准均衡配比）。
         
         采用行业通用的3热+2温+1冷配比，结合区间、奇偶、大小均衡筛选。
         """
         if count <= 0:
-            return {"balls": [], "reasons": {}}
+            return [] if not return_dict else {"balls": [], "reasons": {}}
         
         hot_balls = self.get_hot_red_balls(TOP_HOT)
         warm_balls = self.get_warm_red_balls()
@@ -313,7 +313,9 @@ class SSQAnalyzer:
         final_balls = sorted(candidates[:count])
         final_reasons = {ball: reasons.get(ball, "综合") for ball in final_balls}
         
-        return {"balls": final_balls, "reasons": final_reasons}
+        if return_dict:
+            return {"balls": final_balls, "reasons": final_reasons}
+        return final_balls
     
     def predict_red_balls_advanced(self, count: int = RECOMMEND_RED_COUNT, exclude_balls: List[int] = None) -> Dict[str, any]:
         """基于多维指标共振模型的红球预测（算法B：冷号+高遗漏偏好）。
@@ -563,25 +565,67 @@ class SSQAnalyzer:
         return selected
 
     def predict_blue_ball(self) -> int:
-        """基于频率统计均衡法的蓝球预测（算法A：冷热均衡）。"""
+        """基于综合评分的蓝球预测（算法A：频率+遗漏+多维均衡）。
+        
+        综合考虑频率、遗漏、奇偶、大小、尾数、余数等多维因素。
+        """
         hot_blues = self.get_hot_blue_balls(TOP_BLUE_HOT)
         cold_blues = self.get_cold_blue_balls(TOP_BLUE_HOT)
         high_omission = self.get_high_omission_blue(TOP_BLUE_OMISSION)
-        
-        candidates = []
-        
-        if hot_blues:
-            candidates.append(hot_blues[0])
-        if cold_blues:
-            candidates.append(cold_blues[0])
-        if high_omission:
-            candidates.append(high_omission[0])
-        
+        freq_rank = self._build_freq_rank_map(BLUE_BALLS)
         recent_blues = [rec["blue"] for rec in self.history_data[-5:] if "blue" in rec]
         
-        for ball in candidates:
-            if ball not in recent_blues:
-                return ball
+        parity_info = self.analyze_parity()
+        size_info = self.analyze_size()
+        target_odd = int(round(parity_info["平均奇数"]))
+        target_big = int(round(size_info["平均大数"]))
+        
+        tail_counts = {}
+        mod3_counts = {0: 0, 1: 0, 2: 0}
+        for ball in [rec["blue"] for rec in self.history_data[-10:] if "blue" in rec]:
+            tail = ball % 10
+            tail_counts[tail] = tail_counts.get(tail, 0) + 1
+            mod3_counts[ball % 3] += 1
+        
+        candidates = []
+        for ball in BLUE_BALLS:
+            if ball in recent_blues:
+                continue
+            
+            score = 0.0
+            
+            if ball in hot_blues:
+                score += 25
+            if ball in high_omission:
+                score += 20
+            if ball in cold_blues:
+                score += 15
+            
+            omission = self.blue_omission.get(ball, 0)
+            if omission >= 8:
+                score += omission * 2.5
+            elif omission >= 5:
+                score += omission * 1.5
+            elif omission >= 3:
+                score += omission
+            
+            freq_rank_score = max(0, 15 - freq_rank.get(ball, 16) * 0.5)
+            score += freq_rank_score
+            
+            tail = ball % 10
+            if tail_counts.get(tail, 0) <= 1:
+                score += 12
+            
+            mod3 = ball % 3
+            if mod3_counts.get(mod3, 0) <= 2:
+                score += 10
+            
+            candidates.append((ball, score))
+        
+        candidates.sort(key=lambda x: -x[1])
+        
+        if candidates:
+            return candidates[0][0]
         
         for ball in BLUE_BALLS:
             if ball not in recent_blues:
@@ -590,21 +634,27 @@ class SSQAnalyzer:
         return BLUE_BALLS[0]
 
     def predict_blue_ball_advanced(self, exclude_ball: int = None) -> int:
-        """基于余数+尾数的蓝球预测（算法B：多维共振）。"""
+        """基于冷号+高遗漏偏好的蓝球预测（算法B：反向策略）。
+        
+        与算法A形成互补，优先选择冷号和高遗漏号码，结合区间回补和尾数分布。
+        """
         recent_blues = [rec["blue"] for rec in self.history_data[-5:] if "blue" in rec]
+        cold_blues = self.get_cold_blue_balls(TOP_BLUE_HOT)
+        high_omission = self.get_high_omission_blue(TOP_BLUE_OMISSION)
         
         tail_counts = {}
-        for ball in recent_blues:
+        mod3_counts = {0: 0, 1: 0, 2: 0}
+        mod4_counts = {0: 0, 1: 0, 2: 0, 3: 0}
+        size_counts = {0: 0, 1: 0}
+        parity_counts = {0: 0, 1: 0}
+        
+        for ball in [rec["blue"] for rec in self.history_data[-15:] if "blue" in rec]:
             tail = ball % 10
             tail_counts[tail] = tail_counts.get(tail, 0) + 1
-        
-        mod2_counts = {0: 0, 1: 0}
-        for ball in recent_blues:
-            mod2_counts[ball % 2] += 1
-        
-        size_counts = {0: 0, 1: 0}
-        for ball in recent_blues:
+            mod3_counts[ball % 3] += 1
+            mod4_counts[ball % 4] += 1
             size_counts[0 if ball <= 8 else 1] += 1
+            parity_counts[ball % 2] += 1
         
         candidates = []
         for ball in BLUE_BALLS:
@@ -615,29 +665,46 @@ class SSQAnalyzer:
             
             score = 0
             
+            if ball in cold_blues:
+                score += 35
+            
+            if ball in high_omission:
+                score += 30
+            
+            omission = self.blue_omission.get(ball, 0)
+            if omission >= 10:
+                score += omission * 4
+            elif omission >= 6:
+                score += omission * 2.5
+            elif omission >= 4:
+                score += omission * 1.5
+            
+            freq = self.blue_freq.get(ball, 0)
+            avg_freq = sum(self.blue_freq.values()) / len(BLUE_BALLS)
+            if freq < avg_freq * 0.6:
+                score += 20
+            
             tail = ball % 10
             if tail_counts.get(tail, 0) == 0:
                 score += 25
+            elif tail_counts.get(tail, 0) == 1:
+                score += 15
             
-            mod2 = ball % 2
-            if mod2_counts.get(mod2, 0) < 2:
-                score += 20
+            mod3 = ball % 3
+            if mod3_counts.get(mod3, 0) <= 2:
+                score += 15
+            
+            mod4 = ball % 4
+            if mod4_counts.get(mod4, 0) <= 2:
+                score += 10
             
             size = 0 if ball <= 8 else 1
-            if size_counts.get(size, 0) < 2:
-                score += 20
+            if size_counts.get(size, 0) <= 4:
+                score += 12
             
-            omission = self.blue_omission.get(ball, 0)
-            if omission >= 8:
-                score += omission * 3
-            elif omission >= 5:
-                score += omission * 2
-            elif omission >= 3:
-                score += omission
-            
-            freq = self.blue_freq.get(ball, 0)
-            if freq <= 1:
-                score += 15
+            parity = ball % 2
+            if parity_counts.get(parity, 0) <= 4:
+                score += 12
             
             candidates.append((ball, score))
         
@@ -647,7 +714,7 @@ class SSQAnalyzer:
             return candidates[0][0]
         
         for ball in BLUE_BALLS:
-            if ball != exclude_ball:
+            if ball != exclude_ball and ball not in recent_blues:
                 return ball
         
         return BLUE_BALLS[0]
@@ -1013,7 +1080,8 @@ class SSQAnalyzer:
         lines.append(sep)
         lines.append("          九、下期预测")
         lines.append(sep)
-        pred_red = self.predict_red_balls(RECOMMEND_RED_COUNT)
+        pred_red_result = self.predict_red_balls(RECOMMEND_RED_COUNT)
+        pred_red = pred_red_result["balls"] if isinstance(pred_red_result, dict) else pred_red_result
         pred_blue = self.predict_blue_ball()
         pred_blue_options = self.predict_blue_options(5)
 

@@ -1050,7 +1050,7 @@ def api_predict():
     analyzer.calculate_frequency(limit)
     analyzer.calculate_omission(limit)
     
-    result_a = analyzer.predict_red_balls()
+    result_a = analyzer.predict_red_balls(return_dict=True)
     red_balls_a = result_a["balls"]
     red_reasons_a = result_a["reasons"]
     blue_ball_a = analyzer.predict_blue_ball()
