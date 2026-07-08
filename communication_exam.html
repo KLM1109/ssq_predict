@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通信专业技术人员职业水平考试（初级）题库</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .stats {
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .content-area {
+            flex: 1;
+            min-width: 500px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .question-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-type {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .type-single {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .type-multi {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .type-judge {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .question-number {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .question-text {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            list-style: none;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .option-item:hover {
+            background: #e3f2fd;
+            border-color: #90caf9;
+        }
+
+        .option-item.selected {
+            background: #e8f5e9;
+            border-color: #66bb6a;
+        }
+
+        .option-item.correct {
+            background: #e8f5e9 !important;
+            border-color: #66bb6a !important;
+        }
+
+        .option-item.wrong {
+            background: #ffebee !important;
+            border-color: #ef5350 !important;
+        }
+
+        .option-item.disabled {
+            pointer-events: none;
+        }
+
+        .option-letter {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .option-text {
+            font-size: 15px;
+            color: #333;
+            padding-top: 4px;
+        }
+
+        .option-item.selected .option-letter {
+            background: #66bb6a;
+        }
+
+        .option-item.correct .option-letter {
+            background: #66bb6a;
+        }
+
+        .option-item.wrong .option-letter {
+            background: #ef5350;
+        }
+
+        .answer-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .answer-section.show {
+            display: block;
+        }
+
+        .answer-correct {
+            background: #e8f5e9;
+            border-left: 4px solid #66bb6a;
+        }
+
+        .answer-wrong {
+            background: #ffebee;
+            border-left: 4px solid #ef5350;
+        }
+
+        .answer-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .answer-correct .answer-header {
+            color: #2e7d32;
+        }
+
+        .answer-wrong .answer-header {
+            color: #c62828;
+        }
+
+        .answer-content {
+            color: #555;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-success {
+            background: #66bb6a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #4caf50;
+        }
+
+        .btn-danger {
+            background: #ef5350;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53935;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .exam-mode {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .exam-mode h4 {
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+
+        .exam-info {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .result-card {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .result-score {
+            font-size: 72px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .result-text {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .result-details {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .wrong-list {
+            list-style: none;
+        }
+
+        .wrong-item {
+            padding: 15px;
+            background: #fff3e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .wrong-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .wrong-item a:hover {
+            text-decoration: underline;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 8px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-tab:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ef5350;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .content-area {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📡 通信专业技术人员职业水平考试（初级）题库</h1>
+            <p>涵盖通信基础、传输系统、交换技术、接入网、移动通信、数据通信等核心知识</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>📚 学习导航</h3>
+                <div class="nav-item active" onclick="switchTab('practice')">📝 章节练习</div>
+                <div class="nav-item" onclick="switchTab('exam')">🎯 模拟考试</div>
+                <div class="nav-item" onclick="switchTab('wrong')">❌ 错题集</div>
+                <div class="nav-item" onclick="switchTab('review')">📋 复习进度</div>
+
+                <div class="stats">
+                    <h4>📊 学习统计</h4>
+                    <div class="stat-item">
+                        <span class="stat-label">总题数</span>
+                        <span class="stat-value" id="stat-total">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">已做题</span>
+                        <span class="stat-value" id="stat-done">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">正确率</span>
+                        <span class="stat-value" id="stat-accuracy">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">错题数</span>
+                        <span class="stat-value" id="stat-wrong">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div id="tab-practice" class="tab-content active">
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" onclick="filterQuestions('all')">全部</div>
+                        <div class="filter-tab" onclick="filterQuestions('single')">单选题</div>
+                        <div class="filter-tab" onclick="filterQuestions('multi')">多选题</div>
+                        <div class="filter-tab" onclick="filterQuestions('judge')">判断题</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="practice-progress"></div>
+                    </div>
+                    <div class="progress-text" id="practice-text"></div>
+                    <div id="question-container"></div>
+                </div>
+
+                <div id="tab-exam" class="tab-content">
+                    <div class="exam-mode">
+                        <h4>🎯 模拟考试模式</h4>
+                        <div class="exam-info">
+                            <span>⏱️ 考试时长：60分钟</span>
+                            <span>📝 题目数量：30题</span>
+                            <span>💯 满分：100分</span>
+                        </div>
+                    </div>
+                    <div class="timer" id="exam-timer">60:00</div>
+                    <button class="btn btn-primary" onclick="startExam()" id="start-exam-btn">开始考试</button>
+                    <div id="exam-container" style="display: none;"></div>
+                    <div id="exam-result" style="display: none;"></div>
+                </div>
+
+                <div id="tab-wrong" class="tab-content">
+                    <h3 style="margin-bottom: 20px;">❌ 错题集</h3>
+                    <button class="btn btn-danger" onclick="clearWrongQuestions()" style="margin-bottom: 20px;">清空错题集</button>
+                    <div id="wrong-container"></div>
+                </div>
+
+                <div id="tab-review" class="tab-content">
+                    <h3 style="margin-bottom: 20px;">📋 复习进度</h3>
+                    <div id="review-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            {
+                id: 1,
+                type: 'single',
+                chapter: '通信基础',
+                question: '在5G NR中，用于承载系统消息广播的物理信道是？',
+                options: ['PBCH', 'PDSCH', 'PDCCH', 'PRACH'],
+                answer: 0,
+                analysis: 'PBCH（Physical Broadcast Channel）固定位于SSB内，用于广播MIB，是终端初始接入的必备信息。'
+            },
+            {
+                id: 2,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列关于OSI七层模型的描述，正确的是？',
+                options: [
+                    '传输层仅提供无连接服务',
+                    '数据链路层可进行路由选择',
+                    '网络层负责端到端可靠传输',
+                    '会话层管理通信会话'
+                ],
+                answer: 3,
+                analysis: '会话层建立、管理和终止会话；传输层提供面向连接与无连接两种服务；路由选择属网络层；端到端可靠传输由传输层完成。'
+            },
+            {
+                id: 3,
+                type: 'single',
+                chapter: '数据通信',
+                question: '在IPv6地址中，用于表示"链路本地单播"的前缀为？',
+                options: ['FE80::/10', 'FC00::/7', '2000::/3', 'FF00::/8'],
+                answer: 0,
+                analysis: 'FE80::/10为链路本地地址，仅在本地链路有效，用于邻居发现等机制。'
+            },
+            {
+                id: 4,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列调制方式中，频带利用率最高的是？',
+                options: ['BPSK', 'QPSK', '16QAM', '256QAM'],
+                answer: 3,
+                analysis: '256QAM每符号携带8 bit，频谱效率最高，但对信道条件要求也最苛刻。'
+            },
+            {
+                id: 5,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在SDH帧结构中，用于指示低阶通道误码的字节是？',
+                options: ['B1', 'B2', 'B3', 'V5'],
+                answer: 3,
+                analysis: 'B3字节位于高阶通道开销，用于BIP-8校验，检测高阶通道误码；V5用于低阶通道。'
+            },
+            {
+                id: 6,
+                type: 'single',
+                chapter: '数据通信',
+                question: '当TCP发送端检测到快速重传时，拥塞窗口cwnd应？',
+                options: ['置为1', '减半后进入拥塞避免', '置为ssthresh', '保持不变'],
+                answer: 1,
+                analysis: '收到3个冗余ACK触发快速重传，cwnd减半后设为ssthresh，随后线性增长。'
+            },
+            {
+                id: 7,
+                type: 'single',
+                chapter: '移动通信',
+                question: '在LTE中，UE初始接入时发送的随机接入前导称为？',
+                options: ['Msg1', 'Msg2', 'Msg3', 'Msg4'],
+                answer: 0,
+                analysis: 'Msg1为PRACH上发送的随机接入前导，Msg2为RAR，Msg3为RRC连接请求，Msg4为竞争解决。'
+            },
+            {
+                id: 8,
+                type: 'single',
+                chapter: '传输系统',
+                question: '下列关于天线增益的描述，错误的是？',
+                options: [
+                    '与方向性有关',
+                    '单位可为dBi',
+                    '越高覆盖越远',
+                    '与输入功率成正比'
+                ],
+                answer: 3,
+                analysis: '增益是相对量，与输入功率无关；提高增益可延长覆盖，但牺牲波束宽度。'
+            },
+            {
+                id: 9,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在PTN网络中，用于提供端到端以太网业务的隧道技术是？',
+                options: ['LSP', 'PW', 'VRF', 'RSVP'],
+                answer: 1,
+                analysis: 'PW（Pseudowire）仿真以太网业务，LSP为其提供隧道载体。'
+            },
+            {
+                id: 10,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列哪项不是NFV的核心优势？',
+                options: ['硬件通用化', '弹性伸缩', '降低功耗', '增加物理端口密度'],
+                answer: 3,
+                analysis: 'NFV通过软件化减少专用设备，端口密度由交换机决定，非其直接优势。'
+            },
+            {
+                id: 11,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在光通信中，引起四波混频FWM的主要因素是？',
+                options: ['光纤色散', '光纤非线性', '偏振模色散', '衰减'],
+                answer: 1,
+                analysis: 'FWM源于三阶非线性极化，与功率、信道间隔、色散有关，但根本原因是非线性。'
+            },
+            {
+                id: 12,
+                type: 'single',
+                chapter: '交换技术',
+                question: '当交换机收到未知单播帧时，默认行为是？',
+                options: ['丢弃', '泛洪', '回送', '请求ARP'],
+                answer: 1,
+                analysis: '未知单播在MAC表无匹配项，交换机泛洪到同一VLAN所有端口。'
+            },
+            {
+                id: 13,
+                type: 'single',
+                chapter: '移动通信',
+                question: '在5G核心网中，负责会话管理的网元是？',
+                options: ['AMF', 'SMF', 'UPF', 'AUSF'],
+                answer: 1,
+                analysis: 'SMF（Session Management Function）负责PDU会话建立、修改、释放。'
+            },
+            {
+                id: 14,
+                type: 'single',
+                chapter: '接入网',
+                question: '下列关于PoE的说法，正确的是？',
+                options: [
+                    '802.3af最高输出30W',
+                    '802.3bt Type4可达90W',
+                    '使用3、4、5、6线对供电',
+                    '不能通过千兆链路'
+                ],
+                answer: 1,
+                analysis: '802.3bt Type4上限90W；802.3af为15.4W；供电使用1、2、3、6或4、5、7、8；千兆兼容。'
+            },
+            {
+                id: 15,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在卫星通信中，造成最大自由空间损耗的频段是？',
+                options: ['L', 'S', 'C', 'Ka'],
+                answer: 3,
+                analysis: '自由空间损耗与频率平方成正比，Ka频段最高，损耗最大。'
+            },
+            {
+                id: 16,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列关于区块链在电信领域应用的说法，错误的是？',
+                options: [
+                    '可提升漫游结算效率',
+                    '可降低号码携带成本',
+                    '可完全替代BOSS系统',
+                    '可增强用户隐私保护'
+                ],
+                answer: 2,
+                analysis: '区块链尚无法承载BOSS实时计费、客服等全部功能，只能作为补充。'
+            },
+            {
+                id: 17,
+                type: 'single',
+                chapter: '数据通信',
+                question: '在Linux系统中，查看本机路由表的命令是？',
+                options: ['route -n', 'ipconfig', 'netstat -a', 'traceroute'],
+                answer: 0,
+                analysis: 'route -n或ip route show均可查看内核路由表；ipconfig为Windows命令。'
+            },
+            {
+                id: 18,
+                type: 'single',
+                chapter: '移动通信',
+                question: '下列关于MIMO技术的说法，正确的是？',
+                options: [
+                    '仅适用于TDD系统',
+                    '天线数越多速率一定越高',
+                    '可提升频谱效率',
+                    '必须同频组网'
+                ],
+                answer: 2,
+                analysis: 'MIMO利用空间复用提升频谱效率；FDD亦支持；速率受限于信道秩；异频也可应用。'
+            },
+            {
+                id: 19,
+                type: 'single',
+                chapter: '数据通信',
+                question: '在DNS查询中，用于返回IPv6地址的记录类型是？',
+                options: ['A', 'AAAA', 'CNAME', 'MX'],
+                answer: 1,
+                analysis: 'AAAA记录映射域名到128位IPv6地址。'
+            },
+            {
+                id: 20,
+                type: 'single',
+                chapter: '接入网',
+                question: '光纤通信中，单模光纤与多模光纤的主要区别在于？',
+                options: ['纤芯直径不同', '传输速率不同', '光源类型不同', '施工难度不同'],
+                answer: 0,
+                analysis: '单模纤芯细（约9μm），多模粗（50/62.5μm）；单模使用激光器，多模使用LED；单模传输距离远。'
+            },
+            {
+                id: 21,
+                type: 'single',
+                chapter: '通信基础',
+                question: '在计算机系统中，操作系统属于？软件。',
+                options: ['应用', '系统', '支撑', '办公'],
+                answer: 1,
+                analysis: '操作系统是管理计算机硬件与软件资源的计算机程序，属于系统软件。'
+            },
+            {
+                id: 22,
+                type: 'single',
+                chapter: '数据通信',
+                question: '在TCP/IP协议簇中，UDP协议的主要特点是？',
+                options: [
+                    '面向连接、可靠传输',
+                    '无连接、不可靠传输',
+                    '面向连接、不可靠传输',
+                    '无连接、可靠传输'
+                ],
+                answer: 1,
+                analysis: 'UDP是无连接的，不提供可靠性保证，但传输效率高，适用于实时性要求高的应用。'
+            },
+            {
+                id: 23,
+                type: 'single',
+                chapter: '数据通信',
+                question: '局域网中，以太网采用的介质访问控制方式是？',
+                options: ['CSMA/CD', '令牌传递', '轮询', 'ATM'],
+                answer: 0,
+                analysis: 'CSMA/CD（载波监听多路访问/冲突检测）是以太网的核心介质访问控制方法。'
+            },
+            {
+                id: 24,
+                type: 'single',
+                chapter: '通信基础',
+                question: '在数据通信中，将数字信号转换为模拟信号的过程称为？',
+                options: ['编码', '解码', '调制', '解调'],
+                answer: 2,
+                analysis: '调制是将数字信号转换为模拟信号的过程；解调是相反的过程。'
+            },
+            {
+                id: 25,
+                type: 'single',
+                chapter: '传输系统',
+                question: 'SDH（同步数字体系）帧结构中，STM-1的传输速率是？',
+                options: ['155.520 Mbit/s', '622.080 Mbit/s', '2.488 Gbit/s', '51.84 Mbit/s'],
+                answer: 0,
+                analysis: 'STM-1是SDH的基本速率等级，传输速率为155.520 Mbit/s。'
+            },
+            {
+                id: 26,
+                type: 'single',
+                chapter: '传输系统',
+                question: '光纤通信系统中，实现光信号与电信号相互转换的器件是？',
+                options: ['光纤', '光放大器', '光收发器（光模块）', '光耦合器'],
+                answer: 2,
+                analysis: '光收发器负责光/电转换，是光纤通信系统的核心器件。'
+            },
+            {
+                id: 27,
+                type: 'single',
+                chapter: '传输系统',
+                question: '下列关于单模光纤的描述，正确的是？',
+                options: [
+                    '允许多种模式传输，色散大',
+                    '只允许一种模式传输，色散小，传输距离远',
+                    '纤芯较粗，连接方便',
+                    '适用于短距离、低速率通信'
+                ],
+                answer: 1,
+                analysis: '单模光纤只允许一种模式传输，色散小，传输距离远，适用于长距离高速通信。'
+            },
+            {
+                id: 28,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在卫星通信中，同步卫星相对于地球表面是？',
+                options: ['静止的', '运动的', '相对运动速度为7.9km/s', '周期性运动'],
+                answer: 0,
+                analysis: '同步卫星位于地球同步轨道，相对于地球表面静止。'
+            },
+            {
+                id: 29,
+                type: 'single',
+                chapter: '移动通信',
+                question: '3GPP定义的5G三大应用场景中，适用于自动驾驶和远程控制的是？',
+                options: ['eMBB', 'mMTC', 'URLLC', 'D2D'],
+                answer: 2,
+                analysis: 'URLLC（超高可靠低时延通信）适用于对时延和可靠性要求极高的场景，如自动驾驶、远程控制等。'
+            },
+            {
+                id: 30,
+                type: 'single',
+                chapter: '交换技术',
+                question: '交换技术中，根据交换方式不同，主要分为电路交换、报文交换和？',
+                options: ['分组交换', '信元交换', '快速交换', '存储交换'],
+                answer: 0,
+                analysis: '三大交换方式：电路交换、报文交换、分组交换。'
+            },
+            {
+                id: 31,
+                type: 'multi',
+                chapter: '通信基础',
+                question: '以下哪些属于无线通信的常见干扰源？',
+                options: ['微波炉', '无线电话', '电力线', '雷电'],
+                answer: [0, 1, 2, 3],
+                analysis: '微波炉、无线电话、电力线和雷电都会对无线通信产生干扰。'
+            },
+            {
+                id: 32,
+                type: 'multi',
+                chapter: '传输系统',
+                question: '传输介质中，以下哪些存在信号衰减问题？',
+                options: ['双绞线', '同轴电缆', '光纤', '微波传输'],
+                answer: [0, 1, 2, 3],
+                analysis: '所有传输介质都会存在信号衰减，只是衰减程度不同。光纤衰减最小。'
+            },
+            {
+                id: 33,
+                type: 'multi',
+                chapter: '数据通信',
+                question: '以下哪些协议属于TCP/IP协议簇？',
+                options: ['HTTP', 'FTP', 'SMTP', 'IPX'],
+                answer: [0, 1, 2],
+                analysis: 'HTTP、FTP、SMTP都属于TCP/IP协议簇，IPX属于Novell NetWare协议。'
+            },
+            {
+                id: 34,
+                type: 'multi',
+                chapter: '传输系统',
+                question: '光纤通信系统中，常用的光器件包括？',
+                options: ['光收发器', '光分路器', '光放大器', '光调制器'],
+                answer: [0, 1, 2, 3],
+                analysis: '光收发器、光分路器、光放大器和光调制器都是光纤通信系统中常用的光器件。'
+            },
+            {
+                id: 35,
+                type: 'multi',
+                chapter: '移动通信',
+                question: '以下哪些属于5G网络的关键技术？',
+                options: ['Massive MIMO', '波束赋形', '超密集组网', '软件定义网络（SDN）'],
+                answer: [0, 1, 2],
+                analysis: 'Massive MIMO、波束赋形、超密集组网是5G的关键技术，SDN是网络架构技术。'
+            },
+            {
+                id: 36,
+                type: 'multi',
+                chapter: '通信基础',
+                question: '网络安全中，常见的攻击类型包括？',
+                options: ['DDoS攻击', '病毒感染', '中间人攻击', 'SQL注入'],
+                answer: [0, 1, 2, 3],
+                analysis: 'DDoS攻击、病毒感染、中间人攻击和SQL注入都是常见的网络安全攻击类型。'
+            },
+            {
+                id: 37,
+                type: 'multi',
+                chapter: '数据通信',
+                question: '传输控制协议（TCP）的特性包括？',
+                options: ['面向连接', '可靠传输', '无连接', '流量控制'],
+                answer: [0, 1, 3],
+                analysis: 'TCP是面向连接的、可靠的传输协议，具有流量控制功能。'
+            },
+            {
+                id: 38,
+                type: 'multi',
+                chapter: '传输系统',
+                question: '有线通信中，以下哪些属于传输线损耗的原因？',
+                options: ['信号衰减', '串扰', '匹配损耗', '反射损耗'],
+                answer: [0, 1, 2, 3],
+                analysis: '信号衰减、串扰、匹配损耗和反射损耗都是有线传输中损耗的原因。'
+            },
+            {
+                id: 39,
+                type: 'multi',
+                chapter: '接入网',
+                question: '无线局域网（WLAN）的常见标准包括？',
+                options: ['802.11a', '802.11g', '802.11n', '802.15.4'],
+                answer: [0, 1, 2],
+                analysis: '802.11a、802.11g、802.11n是WLAN标准，802.15.4是ZigBee标准。'
+            },
+            {
+                id: 40,
+                type: 'multi',
+                chapter: '传输系统',
+                question: '光纤通信系统中，常用的色散类型包括？',
+                options: ['束缚色散', '模式色散', '材料色散', '波导色散'],
+                answer: [1, 2, 3],
+                analysis: '光纤色散主要包括模式色散、材料色散和波导色散。'
+            },
+            {
+                id: 41,
+                type: 'judge',
+                chapter: '通信基础',
+                question: '通信科技工作者，在从事通信科技的职业活动中，除应具有一般通信人员的职业道德和一般科技人员的职业道德外，还应具有通信科技职业道德。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '通信科技工作者需要遵守通信科技职业道德，这是行业特殊要求。'
+            },
+            {
+                id: 42,
+                type: 'judge',
+                chapter: '通信基础',
+                question: '实事求是，是科技工作者探求真理，向真理靠近所必须坚持的思想路线、工作态度和工作作风。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '实事求是是科学研究的基本原则。'
+            },
+            {
+                id: 43,
+                type: 'judge',
+                chapter: '通信基础',
+                question: '电信用户有权知悉使用电信服务费用的有关情况。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '根据《电信条例》，用户享有知情权。'
+            },
+            {
+                id: 44,
+                type: 'judge',
+                chapter: '通信基础',
+                question: '分组交换数据网是以分组交换方式工作，并向用户提供数据传输业务的电信网。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '分组交换数据网的定义正确。'
+            },
+            {
+                id: 45,
+                type: 'judge',
+                chapter: '交换技术',
+                question: '智能网的核心思想是交换及业务控制相分离。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '智能网将业务控制与交换功能分离，便于快速部署新业务。'
+            },
+            {
+                id: 46,
+                type: 'judge',
+                chapter: '传输系统',
+                question: '光纤通信中，STM-1的传输速率是155Mbps。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: 'STM-1的标准传输速率是155.520 Mbit/s，约等于155Mbps。'
+            },
+            {
+                id: 47,
+                type: 'judge',
+                chapter: '接入网',
+                question: 'ADSL技术属于窄带数字用户线，无法提供高速上网服务。',
+                options: ['正确', '错误'],
+                answer: 1,
+                analysis: 'ADSL属于宽带技术，可提供较高的下行速率。'
+            },
+            {
+                id: 48,
+                type: 'judge',
+                chapter: '接入网',
+                question: '无线局域网（WLAN）使用的频段主要在2.4GHz和5GHz。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: 'WLAN主要使用2.4GHz和5GHz频段。'
+            },
+            {
+                id: 49,
+                type: 'judge',
+                chapter: '通信基础',
+                question: '调制解调器（Modem）的作用是将数字信号转换为模拟信号。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: 'Modem可以将数字信号转换为模拟信号（调制）或反之（解调）。'
+            },
+            {
+                id: 50,
+                type: 'judge',
+                chapter: '数据通信',
+                question: 'IP地址192.168.1.1属于私有地址，不能用于公网。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '192.168.0.0-192.168.255.255是私有地址范围，不能在公网上路由。'
+            },
+            {
+                id: 51,
+                type: 'judge',
+                chapter: '通信基础',
+                question: '传输延迟是指信号从发送端到接收端所需的时间。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '传输延迟的定义正确。'
+            },
+            {
+                id: 52,
+                type: 'judge',
+                chapter: '移动通信',
+                question: '5G网络的三大应用场景包括增强移动宽带、超高可靠低时延通信和海量机器类通信。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '5G三大应用场景：eMBB、URLLC、mMTC。'
+            },
+            {
+                id: 53,
+                type: 'judge',
+                chapter: '数据通信',
+                question: '网桥工作在数据链路层，用于连接不同网段的局域网。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '网桥工作在数据链路层，可以连接不同网段。'
+            },
+            {
+                id: 54,
+                type: 'judge',
+                chapter: '数据通信',
+                question: 'TCP协议提供可靠的、面向连接的数据传输服务。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: 'TCP是面向连接的可靠传输协议。'
+            },
+            {
+                id: 55,
+                type: 'judge',
+                chapter: '传输系统',
+                question: '光纤的损耗主要来自材料吸收和散射损耗。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '光纤损耗主要包括材料吸收损耗和散射损耗。'
+            },
+            {
+                id: 56,
+                type: 'single',
+                chapter: '接入网',
+                question: '以下哪种协议用于动态分配IP地址？',
+                options: ['FTP', 'SMTP', 'DHCP', 'DNS'],
+                answer: 2,
+                analysis: 'DHCP（动态主机配置协议）用于自动分配IP地址。'
+            },
+            {
+                id: 57,
+                type: 'single',
+                chapter: '通信基础',
+                question: '在OSI七层模型中，数据链路层位于第几层？',
+                options: ['第三层', '第四层', '第二层', '第一层'],
+                answer: 2,
+                analysis: 'OSI七层模型：物理层(1)、数据链路层(2)、网络层(3)、传输层(4)、会话层(5)、表示层(6)、应用层(7)。'
+            },
+            {
+                id: 58,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列哪种加密算法属于对称加密？',
+                options: ['RSA', 'AES', 'ECC', 'SHA-256'],
+                answer: 1,
+                analysis: 'AES是对称加密算法，RSA和ECC是非对称加密，SHA-256是哈希算法。'
+            },
+            {
+                id: 59,
+                type: 'single',
+                chapter: '数据通信',
+                question: '传输速率单位Gbps表示每秒传输多少比特？',
+                options: ['1亿比特', '1万比特', '1千比特', '1兆比特'],
+                answer: 3,
+                analysis: 'Gbps = Gigabits per second = 10^9 bits/s = 1兆比特/秒。'
+            },
+            {
+                id: 60,
+                type: 'single',
+                chapter: '数据通信',
+                question: '以下哪种设备用于实现不同网络之间的路由转发？',
+                options: ['集线器', '交换机', '路由器', '网桥'],
+                answer: 2,
+                analysis: '路由器工作在网络层，负责不同网络之间的路由转发。'
+            },
+            {
+                id: 61,
+                type: 'single',
+                chapter: '移动通信',
+                question: '5G网络相比4G网络的主要优势是？',
+                options: ['更高的传输速率', '更低的功耗', '更广的覆盖范围', '以上都是'],
+                answer: 3,
+                analysis: '5G相比4G具有更高的传输速率、更低的时延、更广的覆盖范围等优势。'
+            },
+            {
+                id: 62,
+                type: 'single',
+                chapter: '数据通信',
+                question: '以下哪种网络拓扑结构适合小型局域网？',
+                options: ['星型', '环型', '总线型', '树型'],
+                answer: 0,
+                analysis: '星型拓扑结构易于管理和扩展，适合小型局域网。'
+            },
+            {
+                id: 63,
+                type: 'single',
+                chapter: '通信基础',
+                question: '传输延迟的单位通常是？',
+                options: ['秒（s）', '毫秒（ms）', '微秒（μs）', '纳秒（ns）'],
+                answer: 1,
+                analysis: '传输延迟通常用毫秒（ms）作为单位。'
+            },
+            {
+                id: 64,
+                type: 'single',
+                chapter: '传输系统',
+                question: '光纤通信中，常用的色散补偿技术是？',
+                options: ['波分复用（WDM）', '延时均衡', '前向纠错（FEC）', '光放大器'],
+                answer: 1,
+                analysis: '延时均衡是常用的色散补偿技术。'
+            },
+            {
+                id: 65,
+                type: 'single',
+                chapter: '通信基础',
+                question: '根据《中华人民共和国电信条例》，电信业务分为哪两大类？',
+                options: [
+                    '基础电信业务和增值电信业务',
+                    '固定通信业务和移动通信业务',
+                    '语音业务和数据业务',
+                    '公众电信业务和专用电信业务'
+                ],
+                answer: 0,
+                analysis: '电信业务分为基础电信业务和增值电信业务两大类。'
+            },
+            {
+                id: 66,
+                type: 'single',
+                chapter: '通信基础',
+                question: '通信科技人员的职业道德核心是？',
+                options: [
+                    '树立服务保障观念，不图名利',
+                    '着眼于国家整体利益，为祖国现代化建设服务',
+                    '全心全意为人民服务',
+                    '有强烈的进取心和敬业精神'
+                ],
+                answer: 1,
+                analysis: '通信科技人员职业道德的核心是着眼于国家整体利益。'
+            },
+            {
+                id: 67,
+                type: 'single',
+                chapter: '通信基础',
+                question: 'PCM（脉冲编码调制）系统中，采样、量化、编码三个步骤的顺序是？',
+                options: [
+                    '量化-采样-编码',
+                    '采样-量化-编码',
+                    '编码-采样-量化',
+                    '采样-编码-量化'
+                ],
+                answer: 1,
+                analysis: 'PCM的三个步骤顺序是：采样→量化→编码。'
+            },
+            {
+                id: 68,
+                type: 'single',
+                chapter: '通信基础',
+                question: '根据奈奎斯特准则，带宽为B的理想低通信道，其极限数据传输率为？',
+                options: ['2B', 'B', 'B/2', '4B'],
+                answer: 0,
+                analysis: '奈奎斯特准则：理想低通信道的极限数据传输率为2B。'
+            },
+            {
+                id: 69,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在多路复用技术中，光纤通信系统中常用的技术是？',
+                options: ['频分复用（FDM）', '时分复用（TDM）', '波分复用（WDM）', '码分复用（CDM）'],
+                answer: 2,
+                analysis: '波分复用（WDM）是光纤通信中常用的多路复用技术。'
+            },
+            {
+                id: 70,
+                type: 'single',
+                chapter: '通信基础',
+                question: '误码率是指？',
+                options: [
+                    '传输错误的码元数占总传输码元数的比例',
+                    '传输错误的比特数占总传输比特数的比例',
+                    '传输错误的数据包数占总传输数据包数的比例',
+                    '信号衰减的比例'
+                ],
+                answer: 0,
+                analysis: '误码率是指传输错误的码元数占总传输码元数的比例。'
+            },
+            {
+                id: 71,
+                type: 'single',
+                chapter: '移动通信',
+                question: '移动通信中，蜂窝系统采用小区分裂的主要目的是？',
+                options: [
+                    '增加信号覆盖范围',
+                    '提高频率利用率，增加系统容量',
+                    '降低基站发射功率',
+                    '减少同频干扰'
+                ],
+                answer: 1,
+                analysis: '小区分裂可以提高频率利用率，增加系统容量。'
+            },
+            {
+                id: 72,
+                type: 'single',
+                chapter: '移动通信',
+                question: 'GSM系统中，用于鉴权加密的三参数组不包括？',
+                options: ['RAND', 'SRES', 'Kc', 'IMSI'],
+                answer: 3,
+                analysis: 'GSM鉴权三参数组包括RAND、SRES、Kc，不包括IMSI。'
+            },
+            {
+                id: 73,
+                type: 'single',
+                chapter: '移动通信',
+                question: '在移动通信的多址接入技术中，CDMA是指？',
+                options: ['频分多址', '时分多址', '码分多址', '空分多址'],
+                answer: 2,
+                analysis: 'CDMA（Code Division Multiple Access）是码分多址。'
+            },
+            {
+                id: 74,
+                type: 'single',
+                chapter: '移动通信',
+                question: '下列关于LTE网络架构的描述，正确的是？',
+                options: [
+                    '采用电路域（CS）和分组域（PS）分离的架构',
+                    '仅支持电路交换',
+                    '全IP化的扁平化架构，取消了电路域',
+                    '核心网包含MSC和SGSN'
+                ],
+                answer: 2,
+                analysis: 'LTE采用全IP化的扁平化架构，取消了传统的电路域。'
+            },
+            {
+                id: 75,
+                type: 'single',
+                chapter: '传输系统',
+                question: '下列哪种传输介质抗干扰能力最强？',
+                options: ['双绞线', '同轴电缆', '光纤', '微波传输'],
+                answer: 2,
+                analysis: '光纤不受电磁干扰影响，抗干扰能力最强。'
+            }
+        ];
+
+        let currentFilter = 'all';
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        let examQuestions = [];
+        let examAnswers = {};
+        let timerInterval = null;
+        let remainingTime = 60 * 60;
+
+        function init() {
+            loadProgress();
+            updateStats();
+            renderQuestion();
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('communication_exam_progress');
+            if (saved) {
+                userAnswers = JSON.parse(saved);
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('communication_exam_progress', JSON.stringify(userAnswers));
+        }
+
+        function getWrongQuestions() {
+            const wrong = [];
+            for (const [id, answer] of Object.entries(userAnswers)) {
+                const question = allQuestions.find(q => q.id === parseInt(id));
+                if (question) {
+                    const isCorrect = Array.isArray(question.answer)
+                        ? arraysEqual(answer, question.answer)
+                        : answer === question.answer;
+                    if (!isCorrect) {
+                        wrong.push(question);
+                    }
+                }
+            }
+            return wrong;
+        }
+
+        function arraysEqual(a, b) {
+            if (a.length !== b.length) return false;
+            return a.every((val, idx) => val === b[idx]);
+        }
+
+        function updateStats() {
+            const total = allQuestions.length;
+            const done = Object.keys(userAnswers).length;
+            
+            let correctCount = 0;
+            for (const [id, answer] of Object.entries(userAnswers)) {
+                const question = allQuestions.find(q => q.id === parseInt(id));
+                if (question) {
+                    const isCorrect = Array.isArray(question.answer)
+                        ? arraysEqual(answer.sort(), question.answer.sort())
+                        : answer === question.answer;
+                    if (isCorrect) correctCount++;
+                }
+            }
+
+            const accuracy = done > 0 ? Math.round((correctCount / done) * 100) : 0;
+            const wrong = done - correctCount;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-done').textContent = done;
+            document.getElementById('stat-accuracy').textContent = accuracy + '%';
+            document.getElementById('stat-wrong').textContent = wrong;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            if (tabName === 'practice') {
+                renderQuestion();
+            } else if (tabName === 'wrong') {
+                renderWrongQuestions();
+            } else if (tabName === 'review') {
+                renderReview();
+            }
+        }
+
+        function filterQuestions(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            currentQuestionIndex = 0;
+            renderQuestion();
+        }
+
+        function getFilteredQuestions() {
+            if (currentFilter === 'all') {
+                return allQuestions;
+            }
+            return allQuestions.filter(q => q.type === currentFilter);
+        }
+
+        function renderQuestion() {
+            const questions = getFilteredQuestions();
+            if (questions.length === 0) {
+                document.getElementById('question-container').innerHTML = `
+                    <div class="empty-state">
+                        <div>📭</div>
+                        <p>暂无匹配的题目</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            
+            document.getElementById('practice-progress').style.width = progress + '%';
+            document.getElementById('practice-text').textContent = `第 ${currentQuestionIndex + 1} / ${questions.length} 题`;
+
+            const userAnswer = userAnswers[question.id];
+            const hasAnswered = userAnswer !== undefined;
+
+            let typeLabel = '单选题';
+            let typeClass = 'type-single';
+            if (question.type === 'multi') {
+                typeLabel = '多选题';
+                typeClass = 'type-multi';
+            } else if (question.type === 'judge') {
+                typeLabel = '判断题';
+                typeClass = 'type-judge';
+            }
+
+            let optionsHtml = '';
+            question.options.forEach((option, index) => {
+                let optionClass = 'option-item';
+                if (hasAnswered) {
+                    optionClass += ' disabled';
+                    if (Array.isArray(question.answer)) {
+                        if (question.answer.includes(index)) {
+                            optionClass += ' correct';
+                        }
+                        if (Array.isArray(userAnswer) && userAnswer.includes(index)) {
+                            if (!question.answer.includes(index)) {
+                                optionClass += ' wrong';
+                            }
+                        }
+                    } else {
+                        if (index === question.answer) {
+                            optionClass += ' correct';
+                        }
+                        if (userAnswer === index && index !== question.answer) {
+                            optionClass += ' wrong';
+                        }
+                    }
+                }
+                if (!hasAnswered && Array.isArray(userAnswer) && userAnswer.includes(index)) {
+                    optionClass += ' selected';
+                } else if (!hasAnswered && userAnswer === index) {
+                    optionClass += ' selected';
+                }
+
+                const letters = question.type === 'judge' ? ['✓', '✗'] : ['A', 'B', 'C', 'D', 'E', 'F'];
+                
+                optionsHtml += `
+                    <li class="${optionClass}" onclick="selectOption(${index})">
+                        <span class="option-letter">${letters[index]}</span>
+                        <span class="option-text">${option}</span>
+                    </li>
+                `;
+            });
+
+            let answerSectionHtml = '';
+            if (hasAnswered) {
+                const isCorrect = Array.isArray(question.answer)
+                    ? arraysEqual([...userAnswer].sort(), [...question.answer].sort())
+                    : userAnswer === question.answer;
+                
+                const resultClass = isCorrect ? 'answer-correct' : 'answer-wrong';
+                const resultText = isCorrect ? '✓ 回答正确' : '✗ 回答错误';
+                
+                const correctAnswerText = Array.isArray(question.answer)
+                    ? question.answer.map(i => ['A', 'B', 'C', 'D', 'E', 'F'][i]).join(', ')
+                    : ['A', 'B', 'C', 'D', 'E', 'F'][question.answer];
+
+                answerSectionHtml = `
+                    <div class="answer-section show ${resultClass}">
+                        <div class="answer-header">${resultText}</div>
+                        <div class="answer-content">
+                            <p><strong>正确答案：</strong>${correctAnswerText}</p>
+                            <p><strong>答案解析：</strong>${question.analysis}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('question-container').innerHTML = `
+                <div class="question-card">
+                    <div class="question-header">
+                        <span class="question-type ${typeClass}">${typeLabel}</span>
+                        <span class="question-number">章节：${question.chapter}</span>
+                    </div>
+                    <div class="question-text">${question.id}. ${question.question}</div>
+                    <ul class="options-list">${optionsHtml}</ul>
+                    ${answerSectionHtml}
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="prevQuestion()" ${currentQuestionIndex === 0 ? 'disabled' : ''}>上一题</button>
+                        ${hasAnswered ? 
+                            '<button class="btn btn-primary" onclick="nextQuestion()">下一题</button>' :
+                            '<button class="btn btn-success" onclick="submitAnswer()">提交答案</button>'
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectOption(index) {
+            const questions = getFilteredQuestions();
+            const question = questions[currentQuestionIndex];
+            if (userAnswers[question.id] !== undefined) return;
+
+            if (question.type === 'multi') {
+                if (!userAnswers[question.id]) {
+                    userAnswers[question.id] = [];
+                }
+                const idx = userAnswers[question.id].indexOf(index);
+                if (idx > -1) {
+                    userAnswers[question.id].splice(idx, 1);
+                } else {
+                    userAnswers[question.id].push(index);
+                }
+            } else {
+                userAnswers[question.id] = index;
+            }
+            renderQuestion();
+        }
+
+        function submitAnswer() {
+            const questions = getFilteredQuestions();
+            const question = questions[currentQuestionIndex];
+            if (userAnswers[question.id] === undefined || 
+                (Array.isArray(userAnswers[question.id]) && userAnswers[question.id].length === 0)) {
+                alert('请先选择答案');
+                return;
+            }
+            saveProgress();
+            updateStats();
+            renderQuestion();
+        }
+
+        function prevQuestion() {
+            const questions = getFilteredQuestions();
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            const questions = getFilteredQuestions();
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                alert('已经是最后一题了');
+            }
+        }
+
+        function startExam() {
+            examQuestions = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 30);
+            examAnswers = {};
+            remainingTime = 60 * 60;
+            currentQuestionIndex = 0;
+            
+            document.getElementById('start-exam-btn').style.display = 'none';
+            document.getElementById('exam-container').style.display = 'block';
+            document.getElementById('exam-result').style.display = 'none';
+            
+            startTimer();
+            renderExamQuestion();
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                const minutes = Math.floor(remainingTime / 60);
+                const seconds = remainingTime % 60;
+                document.getElementById('exam-timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        function renderExamQuestion() {
+            const question = examQuestions[currentQuestionIndex];
+            const progress = ((currentQuestionIndex + 1) / examQuestions.length) * 100;
+            
+            document.getElementById('exam-container').innerHTML = `
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progress}%"></div>
+                </div>
+                <div class="progress-text">第 ${currentQuestionIndex + 1} / ${examQuestions.length} 题</div>
+            `;
+
+            let typeLabel = '单选题';
+            let typeClass = 'type-single';
+            if (question.type === 'multi') {
+                typeLabel = '多选题';
+                typeClass = 'type-multi';
+            } else if (question.type === 'judge') {
+                typeLabel = '判断题';
+                typeClass = 'type-judge';
+            }
+
+            let optionsHtml = '';
+            question.options.forEach((option, index) => {
+                let optionClass = 'option-item';
+                if (Array.isArray(examAnswers[question.id]) && examAnswers[question.id].includes(index)) {
+                    optionClass += ' selected';
+                } else if (examAnswers[question.id] === index) {
+                    optionClass += ' selected';
+                }
+
+                const letters = question.type === 'judge' ? ['✓', '✗'] : ['A', 'B', 'C', 'D', 'E', 'F'];
+                
+                optionsHtml += `
+                    <li class="${optionClass}" onclick="selectExamOption(${index})">
+                        <span class="option-letter">${letters[index]}</span>
+                        <span class="option-text">${option}</span>
+                    </li

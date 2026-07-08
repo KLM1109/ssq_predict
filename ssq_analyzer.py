@@ -564,21 +564,32 @@ class SSQAnalyzer:
             return selected
         return selected
 
-    def predict_blue_ball(self) -> int:
-        """基于综合评分的蓝球预测（算法A：频率+遗漏+多维均衡）。
+    def predict_blue_ball(self) -> Tuple[int, Dict]:
+        """基于综合评分的蓝球预测（算法A：多维智能预测）。
         
-        综合考虑频率、遗漏、奇偶、大小、尾数、余数等多维因素。
+        综合考虑多种算法模型：
+        1. 频率热度模型：热号偏好，近期高频号码
+        2. 遗漏回归模型：中等遗漏号码回归倾向（超长期遗漏适度惩罚）
+        3. 趋势追踪模型：号码上升/下降趋势分析
+        4. 五行相生模型：传统五行理论应用
+        5. 质数分布模型：质数和合数的分布规律
+        6. 日期关联模型：结合开奖日期特征
+        
+        关键改进：超长期遗漏号码（>25期）适度降低权重，避免过度追冷。
+        
+        返回(预测蓝球, 原因字典)
         """
+        recent_blues = [rec["blue"] for rec in self.history_data[-5:] if "blue" in rec]
+        all_blues = [rec["blue"] for rec in self.history_data if "blue" in rec]
+        
         hot_blues = self.get_hot_blue_balls(TOP_BLUE_HOT)
         cold_blues = self.get_cold_blue_balls(TOP_BLUE_HOT)
         high_omission = self.get_high_omission_blue(TOP_BLUE_OMISSION)
         freq_rank = self._build_freq_rank_map(BLUE_BALLS)
-        recent_blues = [rec["blue"] for rec in self.history_data[-5:] if "blue" in rec]
         
-        parity_info = self.analyze_parity()
-        size_info = self.analyze_size()
-        target_odd = int(round(parity_info["平均奇数"]))
-        target_big = int(round(size_info["平均大数"]))
+        avg_freq = sum(self.blue_freq.values()) / len(BLUE_BALLS)
+        avg_ball = sum(all_blues) / len(all_blues) if all_blues else 8.5
+        max_omission = max(self.blue_omission.values()) if self.blue_omission else 0
         
         tail_counts = {}
         mod3_counts = {0: 0, 1: 0, 2: 0}
@@ -587,60 +598,207 @@ class SSQAnalyzer:
             tail_counts[tail] = tail_counts.get(tail, 0) + 1
             mod3_counts[ball % 3] += 1
         
+        prime_balls = {2, 3, 5, 7, 11, 13}
+        prime_recent = sum(1 for b in all_blues[-10:] if b in prime_balls)
+        
+        trend_info = self._analyze_blue_trend()
+        date_info = self._analyze_blue_by_date()
+        
+        five_elements = {
+            1: "水", 2: "土", 3: "木", 4: "火", 5: "土",
+            6: "水", 7: "火", 8: "木", 9: "金", 10: "土",
+            11: "木", 12: "水", 13: "火", 14: "金", 15: "土", 16: "水"
+        }
+        element_counts = {}
+        for ball in all_blues[-15:]:
+            elem = five_elements[ball]
+            element_counts[elem] = element_counts.get(elem, 0) + 1
+        
         candidates = []
+        ball_reasons = {}
         for ball in BLUE_BALLS:
             if ball in recent_blues:
                 continue
             
             score = 0.0
+            reasons = []
+            
+            freq = self.blue_freq.get(ball, 0)
+            omission = self.blue_omission.get(ball, 0)
             
             if ball in hot_blues:
-                score += 25
-            if ball in high_omission:
                 score += 20
+                reasons.append("热号")
             if ball in cold_blues:
-                score += 15
+                if omission <= 20:
+                    score += 8
+                    reasons.append("冷号")
+                else:
+                    score += 3
+                    reasons.append("极冷")
             
-            omission = self.blue_omission.get(ball, 0)
-            if omission >= 8:
-                score += omission * 2.5
+            if ball in high_omission:
+                if omission <= 20:
+                    score += 12
+                    reasons.append("高遗漏")
+                else:
+                    score += 4
+                    reasons.append("超高遗漏")
+            
+            if omission >= 25:
+                score -= omission * 0.3
+                reasons.append(f"超冷{omission}期")
+            elif omission >= 15:
+                score += omission * 0.8
+                reasons.append(f"遗漏{omission}期")
+            elif omission >= 8:
+                score += omission * 1.2
+                reasons.append(f"遗漏{omission}期")
             elif omission >= 5:
-                score += omission * 1.5
+                score += omission * 1.0
             elif omission >= 3:
-                score += omission
+                score += omission * 0.5
             
-            freq_rank_score = max(0, 15 - freq_rank.get(ball, 16) * 0.5)
-            score += freq_rank_score
+            freq_deviation = abs(freq - avg_freq)
+            if freq_deviation < avg_freq * 0.3:
+                score += 12
+                reasons.append("频率均衡")
+            elif freq > avg_freq * 1.3:
+                score += 10
+                reasons.append("高频")
             
             tail = ball % 10
             if tail_counts.get(tail, 0) <= 1:
-                score += 12
+                score += 10
+                reasons.append("尾数冷")
             
             mod3 = ball % 3
             if mod3_counts.get(mod3, 0) <= 2:
-                score += 10
+                score += 8
+                reasons.append("余数冷")
             
+            if ball in prime_balls:
+                if prime_recent < 3:
+                    score += 10
+                    reasons.append("质数")
+            else:
+                if prime_recent >= 5:
+                    score += 8
+                    reasons.append("合数")
+            
+            if trend_info["direction"] == "up" and ball > avg_ball:
+                score += 6
+                reasons.append("趋势向上")
+            elif trend_info["direction"] == "down" and ball < avg_ball:
+                score += 6
+                reasons.append("趋势向下")
+            elif trend_info["volatility"] > 3 and abs(ball - avg_ball) > 4:
+                score += 4
+                reasons.append("高波动")
+            
+            elem = five_elements[ball]
+            if element_counts.get(elem, 0) <= 2:
+                score += 8
+                reasons.append(f"五行{elem}")
+            
+            date_score = date_info.get(ball, 0)
+            if date_score >= 3:
+                score += 6
+                reasons.append("日期偏好")
+            
+            deviation = abs(ball - avg_ball)
+            if deviation < 2:
+                score += 5
+                reasons.append("均值回归")
+            
+            ball_reasons[ball] = ",".join(reasons) if reasons else f"频率{freq}次"
             candidates.append((ball, score))
         
         candidates.sort(key=lambda x: (-x[1], x[0]))
         
         if candidates:
-            return candidates[0][0]
+            return candidates[0][0], ball_reasons
         
         for ball in BLUE_BALLS:
             if ball not in recent_blues:
-                return ball
+                return ball, ball_reasons
         
-        return BLUE_BALLS[0]
+        return BLUE_BALLS[0], ball_reasons
+    
+    def _analyze_blue_trend(self) -> Dict:
+        """分析蓝球趋势：方向、波动率、均值"""
+        recent = [rec["blue"] for rec in self.history_data[-10:] if "blue" in rec]
+        if len(recent) < 5:
+            return {"direction": "stable", "volatility": 0, "mean": 8.5}
+        
+        diffs = [recent[i] - recent[i-1] for i in range(1, len(recent))]
+        avg_diff = sum(diffs) / len(diffs)
+        
+        volatility = sum(abs(d) for d in diffs) / len(diffs)
+        mean_val = sum(recent) / len(recent)
+        
+        direction = "stable"
+        if avg_diff > 1:
+            direction = "up"
+        elif avg_diff < -1:
+            direction = "down"
+        
+        return {"direction": direction, "volatility": volatility, "mean": mean_val}
+    
+    def _analyze_blue_by_date(self) -> Dict:
+        """分析蓝球与日期的关联"""
+        date_scores = {b: 0 for b in BLUE_BALLS}
+        
+        for rec in self.history_data[-50:]:
+            if "blue" not in rec or "日期" not in rec:
+                continue
+            
+            blue = rec["blue"]
+            date_str = rec["日期"]
+            try:
+                if len(date_str) == 8:
+                    day = int(date_str[6:8])
+                    month = int(date_str[4:6])
+                elif "-" in date_str:
+                    parts = date_str.split("-")
+                    day = int(parts[-1])
+                    month = int(parts[-2])
+                else:
+                    continue
+                
+                if blue == day % 16 or blue == day % 16 + 1:
+                    date_scores[blue] += 1
+                if blue == month % 16 or blue == month % 16 + 1:
+                    date_scores[blue] += 1
+                if blue == (day + month) % 16 or blue == (day + month) % 16 + 1:
+                    date_scores[blue] += 1
+            except:
+                continue
+        
+        return date_scores
 
-    def predict_blue_ball_advanced(self, exclude_ball: int = None) -> int:
-        """基于冷号+高遗漏偏好的蓝球预测（算法B：反向策略）。
+    def predict_blue_ball_advanced(self, exclude_ball: int = None) -> Tuple[int, Dict]:
+        """基于反向策略的蓝球预测（算法B：多元回归预测）。
         
-        与算法A形成互补，优先选择冷号和高遗漏号码，结合区间回补和尾数分布。
+        综合考虑多种算法模型：
+        1. 遗漏回归模型：中等遗漏号码回归倾向（超长期遗漏适度惩罚）
+        2. 冷号复苏模型：适度冷号复苏概率（极冷号码降低权重）
+        3. 差分预测模型：号码差值的周期性规律
+        4. 对称分布模型：首尾对称号码的关联性
+        5. 重复周期模型：号码重复出现的周期规律
+        6. 振幅分析模型：号码波动幅度的统计规律
+        
+        与算法A形成互补，但不再过度追冷，超长期遗漏号码适度降低权重。
+        
+        返回(预测蓝球, 原因字典)
         """
         recent_blues = [rec["blue"] for rec in self.history_data[-5:] if "blue" in rec]
+        all_blues = [rec["blue"] for rec in self.history_data if "blue" in rec]
+        
         cold_blues = self.get_cold_blue_balls(TOP_BLUE_HOT)
         high_omission = self.get_high_omission_blue(TOP_BLUE_OMISSION)
+        
+        avg_freq = sum(self.blue_freq.values()) / len(BLUE_BALLS)
         
         tail_counts = {}
         mod3_counts = {0: 0, 1: 0, 2: 0}
@@ -656,7 +814,45 @@ class SSQAnalyzer:
             size_counts[0 if ball <= 8 else 1] += 1
             parity_counts[ball % 2] += 1
         
+        diff_patterns = {}
+        for i in range(1, len(all_blues)):
+            diff = abs(all_blues[i] - all_blues[i-1])
+            diff_patterns[diff] = diff_patterns.get(diff, 0) + 1
+        
+        repeat_cycles = {}
+        for i, ball in enumerate(all_blues):
+            for j in range(i+1, min(i+20, len(all_blues))):
+                if all_blues[j] == ball:
+                    cycle = j - i
+                    repeat_cycles[cycle] = repeat_cycles.get(cycle, 0) + 1
+        
+        symmetry_pairs = [(b, 17-b) for b in BLUE_BALLS if b < 9]
+        symmetry_scores = {}
+        for rec in self.history_data[-20:]:
+            if "blue" not in rec:
+                continue
+            blue = rec["blue"]
+            for b1, b2 in symmetry_pairs:
+                if blue == b1:
+                    symmetry_scores[b2] = symmetry_scores.get(b2, 0) + 1
+                elif blue == b2:
+                    symmetry_scores[b1] = symmetry_scores.get(b1, 0) + 1
+        
+        amplitude_scores = {}
+        for ball in BLUE_BALLS:
+            amplitudes = []
+            for i, rec in enumerate(self.history_data):
+                if "blue" not in rec:
+                    continue
+                if rec["blue"] == ball and i > 0:
+                    prev_blue = self.history_data[i-1]["blue"] if "blue" in self.history_data[i-1] else ball
+                    amplitudes.append(abs(ball - prev_blue))
+            if amplitudes:
+                avg_amp = sum(amplitudes) / len(amplitudes)
+                amplitude_scores[ball] = avg_amp
+        
         candidates = []
+        ball_reasons = {}
         for ball in BLUE_BALLS:
             if ball == exclude_ball:
                 continue
@@ -664,82 +860,150 @@ class SSQAnalyzer:
                 continue
             
             score = 0
-            
-            if ball in cold_blues:
-                score += 35
-            
-            if ball in high_omission:
-                score += 30
-            
-            omission = self.blue_omission.get(ball, 0)
-            if omission >= 10:
-                score += omission * 4
-            elif omission >= 6:
-                score += omission * 2.5
-            elif omission >= 4:
-                score += omission * 1.5
+            reasons = []
             
             freq = self.blue_freq.get(ball, 0)
-            avg_freq = sum(self.blue_freq.values()) / len(BLUE_BALLS)
+            omission = self.blue_omission.get(ball, 0)
+            
+            if ball in cold_blues:
+                if omission <= 20:
+                    score += 15
+                    reasons.append("冷号")
+                else:
+                    score += 4
+                    reasons.append("极冷")
+            
+            if ball in high_omission:
+                if omission <= 20:
+                    score += 12
+                    reasons.append("高遗漏")
+                else:
+                    score += 3
+                    reasons.append("超高遗漏")
+            
+            if omission >= 25:
+                score -= omission * 0.4
+                reasons.append(f"超冷{omission}期")
+            elif omission >= 15:
+                score += omission * 0.6
+                reasons.append(f"遗漏{omission}期")
+            elif omission >= 8:
+                score += omission * 1.0
+                reasons.append(f"遗漏{omission}期")
+            elif omission >= 5:
+                score += omission * 0.8
+            elif omission >= 3:
+                score += omission * 0.4
+            
             if freq < avg_freq * 0.6:
-                score += 20
+                if omission <= 20:
+                    score += 12
+                    reasons.append("低频率")
+                else:
+                    score += 4
+                    reasons.append("极低频率")
+            
+            if freq > avg_freq * 1.2:
+                score += 8
+                reasons.append("偏高频率")
             
             tail = ball % 10
             if tail_counts.get(tail, 0) == 0:
-                score += 25
-            elif tail_counts.get(tail, 0) == 1:
                 score += 15
+                reasons.append("尾数未出")
+            elif tail_counts.get(tail, 0) == 1:
+                score += 10
+                reasons.append("尾数冷")
             
             mod3 = ball % 3
             if mod3_counts.get(mod3, 0) <= 2:
-                score += 15
+                score += 10
+                reasons.append("除3余冷")
             
             mod4 = ball % 4
             if mod4_counts.get(mod4, 0) <= 2:
-                score += 10
+                score += 7
+                reasons.append("除4余冷")
             
             size = 0 if ball <= 8 else 1
             if size_counts.get(size, 0) <= 4:
-                score += 12
+                score += 8
+                reasons.append("小数" if size == 0 else "大数")
             
             parity = ball % 2
             if parity_counts.get(parity, 0) <= 4:
-                score += 12
+                score += 8
+                reasons.append("奇数" if parity == 1 else "偶数")
             
+            symmetry_score = symmetry_scores.get(ball, 0)
+            if symmetry_score >= 3:
+                score += 12
+                reasons.append("对称号码")
+            
+            amp = amplitude_scores.get(ball, 0)
+            if amp > 4:
+                score += 8
+                reasons.append("高振幅")
+            
+            if all_blues and ball not in all_blues[-20:]:
+                score += 8
+                reasons.append("长期未出")
+            
+            if len(all_blues) >= 2 and ball == all_blues[-2]:
+                score += 6
+                reasons.append("间隔重复")
+            
+            ball_reasons[ball] = ",".join(reasons) if reasons else f"频率{freq}次"
             candidates.append((ball, score))
         
         candidates.sort(key=lambda x: (-x[1], x[0]))
         
         if candidates:
-            return candidates[0][0]
+            return candidates[0][0], ball_reasons
         
         for ball in BLUE_BALLS:
             if ball != exclude_ball and ball not in recent_blues:
-                return ball
+                return ball, ball_reasons
         
-        return BLUE_BALLS[0]
+        return BLUE_BALLS[0], ball_reasons
 
-    def predict_blue_options(self, top_n: int = 5) -> List[int]:
-        """返回按综合评分排序的蓝球候选(已排序)。"""
+    def predict_blue_options(self, top_n: int = 5) -> Tuple[List[int], Dict]:
+        """返回按综合评分排序的蓝球候选(已排序)及原因字典。"""
         hot_blues = self.get_hot_blue_balls(TOP_BLUE_HOT)
         high_omission = self.get_high_omission_blue(TOP_BLUE_OMISSION)
         freq_rank = self._build_freq_rank_map(BLUE_BALLS)
+        recent_blues = [rec["blue"] for rec in self.history_data[-5:] if "blue" in rec]
         scores: List[Tuple[int, float]] = []
+        ball_reasons = {}
+        
         for ball in BLUE_BALLS:
+            if ball in recent_blues:
+                continue
+            
             score = 0.0
+            reasons = []
+            
             if ball in hot_blues:
                 score += 30
+                reasons.append("热号")
             if ball in high_omission:
                 score += 25
+                reasons.append("高遗漏")
+            
             score += max(0.0, 20 - freq_rank.get(ball, 0))
+            
             omission = self.blue_omission[ball]
             if omission >= 6:
                 score += omission * 2
+                reasons.append(f"遗漏{omission}期")
             elif omission >= 3:
                 score += omission
+            
+            ball_reasons[ball] = ",".join(reasons) if reasons else f"频率{self.blue_freq.get(ball, 0)}次"
             scores.append((ball, score))
-        scores.sort(key=lambda x: -x[1])
-        return sorted(b for b, _ in scores[:top_n])
+        
+        scores.sort(key=lambda x: (-x[1], x[0]))
+        return sorted(b for b, _ in scores[:top_n]), ball_reasons
     
     def predict_with_params(
         self,
@@ -1082,8 +1346,8 @@ class SSQAnalyzer:
         lines.append(sep)
         pred_red_result = self.predict_red_balls(RECOMMEND_RED_COUNT)
         pred_red = pred_red_result["balls"] if isinstance(pred_red_result, dict) else pred_red_result
-        pred_blue = self.predict_blue_ball()
-        pred_blue_options = self.predict_blue_options(5)
+        pred_blue, _ = self.predict_blue_ball()
+        pred_blue_options, _ = self.predict_blue_options(5)
 
         lines.append("\n【预测红球】(6个):")
         lines.append(f"  {self._fmt_balls(pred_red)}")

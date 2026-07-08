@@ -256,11 +256,11 @@ class TestPrediction(unittest.TestCase):
         self.assertEqual(set(pred), set(RED_BALLS))
 
     def test_blue_in_range(self):
-        b = self.a.predict_blue_ball()
+        b, _ = self.a.predict_blue_ball()
         self.assertIn(b, BLUE_BALLS)
 
     def test_blue_options_count_and_sorted(self):
-        opts = self.a.predict_blue_options(5)
+        opts, _ = self.a.predict_blue_options(5)
         self.assertEqual(len(opts), 5)
         self.assertEqual(opts, sorted(opts))
         for b in opts:

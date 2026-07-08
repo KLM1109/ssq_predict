@@ -109,22 +109,23 @@ HTML_TEMPLATE = """
         .search-box input:focus { outline: none; border-color: #e74c3c; }
         .history-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
         .history-main { display: flex; gap: 15px; }
-        #historyContent { width: 60%; }
-        #historyAnalysis { width: 40%; }
+        #historyContent { width: 70%; }
+        #historyAnalysis { width: 30%; }
         .btn.active { background: #e74c3c; color: white; border-color: #e74c3c; }
         .btn-period-10.active { background: #27ae60; border-color: #27ae60; }
         .btn-period-30.active { background: #3498db; border-color: #3498db; }
         .btn-period-50.active { background: #9b59b6; border-color: #9b59b6; }
         .btn-period-all.active { background: #e74c3c; border-color: #e74c3c; }
-        .trend-container { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
-        .trend-header-row { display: flex; background: #f8f9fa; border-bottom: 1px solid #ddd; }
-        .trend-header-row .trend-cell { font-weight: 600; font-size: 0.6rem; color: #666; }
-        .trend-row { display: flex; border-bottom: 1px solid #f0f0f0; }
+        .trend-container { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; table-layout: fixed; width: 100%; }
+        .trend-header-row { display: table-row; background: #f8f9fa; border-bottom: 1px solid #ddd; }
+        .trend-row { display: table-row; border-bottom: 1px solid #f0f0f0; }
         .trend-row:last-child { border-bottom: none; }
-        .trend-period { width: 90px; padding: 6px 8px; text-align: right; font-size: 0.75rem; color: #333; border-right: 1px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .trend-red-area { flex: 33; display: flex; }
-        .trend-blue-area { flex: 16; display: flex; border-left: 1px solid #eee; }
-        .trend-cell { flex: 1; min-width: 24px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; border-right: 1px solid #f5f5f5; }
+        .trend-period { display: table-cell; width: 85px; padding: 4px 6px; text-align: right; font-size: 0.75rem; color: #333; border-right: 1px solid #eee; white-space: nowrap; vertical-align: middle; }
+        .trend-red-area { display: table-cell; width: 65%; }
+        .trend-blue-area { display: table-cell; width: 28%; border-left: 1px solid #eee; }
+        .trend-red-inner, .trend-blue-inner { display: flex; width: 100%; }
+        .trend-cell { flex: 1; min-width: 20px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; border-right: 1px solid #f5f5f5; }
+        .trend-header-row .trend-cell { font-weight: 600; font-size: 0.6rem; color: #666; }
         .trend-cell:last-child { border-right: none; }
         .trend-cell.red { background: #e74c3c; color: white; font-weight: bold; border-radius: 4px; margin: 2px; }
         .trend-cell.blue { background: #3498db; color: white; font-weight: bold; border-radius: 4px; margin: 2px; }
@@ -220,9 +221,6 @@ HTML_TEMPLATE = """
                             <button class="btn" onclick="doPredict()">
                                 <span class="loading" id="predictLoading" style="display:none;"></span>
                                 生成预测
-                            </button>
-                            <button class="btn btn-secondary" onclick="refreshData()">
-                                刷新数据
                             </button>
                             
                             <button class="btn btn-secondary btn-period-10" onclick="selectPeriod(10)">近10期</button>
@@ -341,10 +339,13 @@ HTML_TEMPLATE = """
                             let reason = redReasons[b] || '';
                             return `<span class="ball red" title="${reason}">${b.toString().padStart(2, '0')}</span>`;
                         }).join('');
-                        let blueBalls = `<span class="ball blue">${pred.blue_ball.toString().padStart(2, '0')}</span>`;
-                        let blueOptions = pred.blue_options.slice(1).map(b => 
-                            `<span class="ball blue small">${b.toString().padStart(2, '0')}</span>`
-                        ).join('');
+                        let blueReason = pred.blue_reason || '';
+                        let blueBalls = `<span class="ball blue" title="${blueReason}">${pred.blue_ball.toString().padStart(2, '0')}</span>`;
+                        let blueOptionsReasons = pred.blue_options_reasons || {};
+                        let blueOptions = pred.blue_options.slice(1).map(b => {
+                            let reason = blueOptionsReasons[b] || '';
+                            return `<span class="ball blue small" title="${reason}">${b.toString().padStart(2, '0')}</span>`;
+                        }).join('');
                         let features = pred.features;
                         
                         let reasonHtml = '';
@@ -355,6 +356,21 @@ HTML_TEMPLATE = """
                                 reasonHtml += `<span style="margin-right:8px;">${b.toString().padStart(2, '0')}: ${reason}</span>`;
                             });
                             reasonHtml += '</div>';
+                        }
+                        
+                        let blueReasonHtml = '';
+                        if (blueReason) {
+                            blueReasonHtml = `<div style="font-size:0.75rem;color:#888;margin-top:4px;">蓝球原因: ${blueReason}</div>`;
+                        }
+                        
+                        let blueOptionsReasonHtml = '';
+                        if (blueOptionsReasons && pred.blue_options.slice(1).length > 0) {
+                            blueOptionsReasonHtml = '<div style="font-size:0.75rem;color:#888;margin-top:4px;">';
+                            pred.blue_options.slice(1).forEach(b => {
+                                let reason = blueOptionsReasons[b] || '综合';
+                                blueOptionsReasonHtml += `<span style="margin-right:8px;">${b.toString().padStart(2, '0')}: ${reason}</span>`;
+                            });
+                            blueOptionsReasonHtml += '</div>';
                         }
                         
                         let featureHtml = `
@@ -385,10 +401,12 @@ HTML_TEMPLATE = """
                                 </div>
                                 <div>
                                     <strong>预测蓝球：</strong>
-                                    <div class="ball-grid" style="margin-bottom:8px;">${blueBalls}</div>
-                                    <div style="font-size:0.85rem;color:#666;">
+                                    <div class="ball-grid" style="margin-bottom:4px;">${blueBalls}</div>
+                                    ${blueReasonHtml}
+                                    <div style="font-size:0.85rem;color:#666;margin-top:8px;">
                                         备选蓝球：<div style="display:flex;gap:6px;display:inline-flex;">${blueOptions}</div>
                                     </div>
+                                    ${blueOptionsReasonHtml}
                                 </div>
                                 ${featureHtml}
                             </div>
@@ -406,38 +424,57 @@ HTML_TEMPLATE = """
                         </div>
                         
                         <div style="background:#f8f9fa;padding:20px;border-radius:8px;margin-top:20px;">
-                            <h3 style="font-size:1.15rem;margin-bottom:15px;color:#333;">预测原理</h3>
-                            
-                            <div style="margin-bottom:15px;">
-                                <h4 style="font-size:1rem;margin-bottom:10px;color:#e74c3c;">算法A：频率统计均衡法</h4>
-                                <div style="font-size:0.85rem;color:#666;line-height:1.8;">
-                                    <p><strong>核心策略：</strong>采用行业通用的3热+2温+1冷配比原则，结合区间、奇偶、大小均衡筛选，避免极端组合。</p>
-                                    <p><strong>冷热温判定标准：</strong></p>
-                                    <ul>
-                                        <li>热号：近10期出现≥4次，短期高频开出</li>
-                                        <li>温号：近10期出现2-3次，冷热过渡均衡</li>
-                                        <li>冷号：近10期出现≤1次，长期遗漏未开出</li>
-                                    </ul>
-                                    <p><strong>配比原则：</strong>3热+2温+1冷（占比约68%），兼顾短期活跃号码与长期遗漏回补。</p>
-                                    <p><strong>平衡调整：</strong>确保区间2:2:2或3:2:1、奇偶3:3、大小3:3的均衡形态。</p>
+                                <h3 style="font-size:1.15rem;margin-bottom:15px;color:#333;">预测原理</h3>
+                                
+                                <div style="margin-bottom:15px;">
+                                    <h4 style="font-size:1rem;margin-bottom:10px;color:#e74c3c;">算法A：频率统计均衡法</h4>
+                                    <div style="font-size:0.85rem;color:#666;line-height:1.8;">
+                                        <p><strong>红球策略：</strong>采用行业通用的3热+2温+1冷配比原则，结合区间、奇偶、大小均衡筛选，避免极端组合。</p>
+                                        <p><strong>冷热温判定标准：</strong></p>
+                                        <ul>
+                                            <li>热号：近10期出现≥4次，短期高频开出</li>
+                                            <li>温号：近10期出现2-3次，冷热过渡均衡</li>
+                                            <li>冷号：近10期出现≤1次，长期遗漏未开出</li>
+                                        </ul>
+                                        <p><strong>配比原则：</strong>3热+2温+1冷（占比约68%），兼顾短期活跃号码与长期遗漏回补。</p>
+                                        <p><strong>平衡调整：</strong>确保区间2:2:2或3:2:1、奇偶3:3、大小3:3的均衡形态。</p>
+                                        <p><strong>蓝球策略：</strong>多维智能预测，综合考虑8种算法模型：</p>
+                                        <ul>
+                                            <li><strong>频率热度模型：</strong>热号偏好，近期高频号码</li>
+                                            <li><strong>遗漏回归模型：</strong>高遗漏号码回归倾向</li>
+                                            <li><strong>频率均衡模型：</strong>频率接近平均值的号码更稳定</li>
+                                            <li><strong>质数分布模型：</strong>质数(2,3,5,7,11,13)和合数的分布规律</li>
+                                            <li><strong>趋势追踪模型：</strong>号码上升/下降趋势分析</li>
+                                            <li><strong>五行相生模型：</strong>传统五行理论应用</li>
+                                            <li><strong>日期关联模型：</strong>结合开奖日期特征</li>
+                                            <li><strong>均值回归模型：</strong>接近平均值的号码回归倾向</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom:15px;">
+                                    <h4 style="font-size:1rem;margin-bottom:10px;color:#3498db;">算法B：多元回归预测法</h4>
+                                    <div style="font-size:0.85rem;color:#666;line-height:1.8;">
+                                        <p><strong>红球策略：</strong>采用余数分类法、尾数关联法、区间回补法等多维度交叉验证，优先选择冷号和高遗漏号码。</p>
+                                        <p><strong>余数分类法：</strong>按除3余数分为余0、余1、余2三类，每类理论占比约33%，若某类连续偏少则重点关注。</p>
+                                        <p><strong>尾数关联法：</strong>统计近5期尾数分布，若某尾数连续未出现则纳入候选。</p>
+                                        <p><strong>区间回补法：</strong>若某区间连续3期出号偏少，下期适当增加该区间号码。</p>
+                                        <p><strong>蓝球策略：</strong>反向策略预测，综合考虑6种算法模型：</p>
+                                        <ul>
+                                            <li><strong>冷号复苏模型：</strong>长期未出号码的复苏概率</li>
+                                            <li><strong>对称分布模型：</strong>首尾对称号码的关联性(如1和16, 2和15)</li>
+                                            <li><strong>振幅分析模型：</strong>号码波动幅度的统计规律</li>
+                                            <li><strong>长期未出模型：</strong>最近20期未出现的号码</li>
+                                            <li><strong>间隔重复模型：</strong>隔期重复出现的规律</li>
+                                            <li><strong>差分预测模型：</strong>号码差值的周期性规律</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top:15px;padding-top:15px;border-top:1px dashed #ddd;font-size:0.8rem;color:#999;text-align:center;">
+                                    * 彩票开奖结果完全随机，本预测仅供参考，不代表真实开奖结果
                                 </div>
                             </div>
-                            
-                            <div style="margin-bottom:15px;">
-                                <h4 style="font-size:1rem;margin-bottom:10px;color:#3498db;">算法B：多维指标共振法</h4>
-                                <div style="font-size:0.85rem;color:#666;line-height:1.8;">
-                                    <p><strong>核心策略：</strong>采用余数分类法、尾数关联法、区间回补法等多维度交叉验证。</p>
-                                    <p><strong>余数分类法：</strong>按除3余数分为余0、余1、余2三类，每类理论占比约33%，若某类连续偏少则重点关注。</p>
-                                    <p><strong>尾数关联法：</strong>统计近5期尾数分布，若某尾数连续未出现则纳入候选。</p>
-                                    <p><strong>区间回补法：</strong>若某区间连续3期出号偏少，下期适当增加该区间号码。</p>
-                                    <p><strong>多维共振：</strong>当某号码同时满足多个条件时，出现概率显著提升。</p>
-                                </div>
-                            </div>
-                            
-                            <div style="margin-top:15px;padding-top:15px;border-top:1px dashed #ddd;font-size:0.8rem;color:#999;text-align:center;">
-                                * 彩票开奖结果完全随机，本预测仅供参考，不代表真实开奖结果
-                            </div>
-                        </div>
                     `;
                 });
         }
@@ -485,34 +522,34 @@ HTML_TEMPLATE = """
                     
                     html += '<div class="trend-header-row">';
                     html += '<div class="trend-period">期号</div>';
-                    html += '<div class="trend-red-area">';
+                    html += '<div class="trend-red-area"><div class="trend-red-inner">';
                     for (let i = 1; i <= 33; i++) {
                         html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
                     }
-                    html += '</div>';
-                    html += '<div class="trend-blue-area">';
+                    html += '</div></div>';
+                    html += '<div class="trend-blue-area"><div class="trend-blue-inner">';
                     for (let i = 1; i <= 16; i++) {
                         html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
                     }
-                    html += '</div>';
+                    html += '</div></div>';
                     html += '</div>';
                     
                     records.forEach(rec => {
                         let redSet = new Set(rec.reds);
                         html += '<div class="trend-row">';
                         html += `<div class="trend-period">${rec.period}</div>`;
-                        html += '<div class="trend-red-area">';
+                        html += '<div class="trend-red-area"><div class="trend-red-inner">';
                         for (let i = 1; i <= 33; i++) {
                             let cls = redSet.has(i) ? 'red' : '';
                             html += `<div class="trend-cell ${cls}">${redSet.has(i) ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        html += '</div>';
-                        html += '<div class="trend-blue-area">';
+                        html += '</div></div>';
+                        html += '<div class="trend-blue-area"><div class="trend-blue-inner">';
                         for (let i = 1; i <= 16; i++) {
                             let cls = i === rec.blue ? 'blue' : '';
                             html += `<div class="trend-cell ${cls}">${i === rec.blue ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        html += '</div>';
+                        html += '</div></div>';
                         html += '</div>';
                     });
                     
@@ -571,27 +608,27 @@ HTML_TEMPLATE = """
                             }
                             
                             let hotReds = analysisData.hot_reds.map((b, i) => 
-                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">${i + 1}位</span></li>`
+                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">出现${analysisData.red_freq[b.toString()] || analysisData.red_freq[b] || 0}次</span></li>`
                             ).join('');
                             
                             let coldReds = analysisData.cold_reds.map((b, i) => 
-                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">${i + 1}位</span></li>`
+                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">出现${analysisData.red_freq[b.toString()] || analysisData.red_freq[b] || 0}次</span></li>`
                             ).join('');
                             
                             let hotBlues = analysisData.hot_blues.map((b, i) => 
-                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">${i + 1}位</span></li>`
+                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">出现${analysisData.blue_freq[b.toString()] || analysisData.blue_freq[b] || 0}次</span></li>`
                             ).join('');
                             
                             let coldBlues = analysisData.cold_blues.map((b, i) => 
-                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">${i + 1}位</span></li>`
+                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">出现${analysisData.blue_freq[b.toString()] || analysisData.blue_freq[b] || 0}次</span></li>`
                             ).join('');
                             
                             let highOmissionReds = analysisData.high_omission_reds.map((b, i) => 
-                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count">${analysisData.red_omission[b]}期</span></li>`
+                                `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count">${analysisData.red_omission[b.toString()] || analysisData.red_omission[b] || 0}期</span></li>`
                             ).join('');
                             
                             let highOmissionBlues = analysisData.high_omission_blues.map((b, i) => 
-                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count">${analysisData.blue_omission[b]}期</span></li>`
+                                `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count">${analysisData.blue_omission[b.toString()] || analysisData.blue_omission[b] || 0}期</span></li>`
                             ).join('');
                             
                             let intervalDist = analysisData.interval_distribution;
@@ -659,34 +696,34 @@ HTML_TEMPLATE = """
                     
                     html += '<div class="trend-header-row">';
                     html += '<div class="trend-period">期号</div>';
-                    html += '<div class="trend-red-area">';
+                    html += '<div class="trend-red-area"><div class="trend-red-inner">';
                     for (let i = 1; i <= 33; i++) {
                         html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
                     }
-                    html += '</div>';
-                    html += '<div class="trend-blue-area">';
+                    html += '</div></div>';
+                    html += '<div class="trend-blue-area"><div class="trend-blue-inner">';
                     for (let i = 1; i <= 16; i++) {
                         html += `<div class="trend-cell">${i.toString().padStart(2, '0')}</div>`;
                     }
-                    html += '</div>';
+                    html += '</div></div>';
                     html += '</div>';
                     
                     records.forEach(rec => {
                         let redSet = new Set(rec.reds);
                         html += '<div class="trend-row">';
                         html += `<div class="trend-period">${rec.period}</div>`;
-                        html += '<div class="trend-red-area">';
+                        html += '<div class="trend-red-area"><div class="trend-red-inner">';
                         for (let i = 1; i <= 33; i++) {
                             let cls = redSet.has(i) ? 'red' : '';
                             html += `<div class="trend-cell ${cls}">${redSet.has(i) ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        html += '</div>';
-                        html += '<div class="trend-blue-area">';
+                        html += '</div></div>';
+                        html += '<div class="trend-blue-area"><div class="trend-blue-inner">';
                         for (let i = 1; i <= 16; i++) {
                             let cls = i === rec.blue ? 'blue' : '';
                             html += `<div class="trend-cell ${cls}">${i === rec.blue ? i.toString().padStart(2, '0') : ''}</div>`;
                         }
-                        html += '</div>';
+                        html += '</div></div>';
                         html += '</div>';
                     });
                     
@@ -718,27 +755,27 @@ HTML_TEMPLATE = """
                     }
 
                     let hotReds = data.hot_reds.map((b, i) => 
-                        `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">${i + 1}位</span></li>`
+                        `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">出现${data.red_freq[b.toString()] || data.red_freq[b] || 0}次</span></li>`
                     ).join('');
                     
                     let coldReds = data.cold_reds.map((b, i) => 
-                        `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">${i + 1}位</span></li>`
+                        `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">出现${data.red_freq[b.toString()] || data.red_freq[b] || 0}次</span></li>`
                     ).join('');
                     
                     let highOmissionReds = data.high_omission_reds.map((b, i) => 
-                        `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count omission-high">遗漏${data.red_omission[b]}期</span></li>`
+                        `<li><span class="name">红球${b.toString().padStart(2, '0')}</span><span class="count omission-high">遗漏${data.red_omission[b.toString()] || data.red_omission[b] || 0}期</span></li>`
                     ).join('');
                     
                     let hotBlues = data.hot_blues.map((b, i) => 
-                        `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">${i + 1}位</span></li>`
+                        `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-high">出现${data.blue_freq[b.toString()] || data.blue_freq[b] || 0}次</span></li>`
                     ).join('');
                     
                     let coldBlues = data.cold_blues.map((b, i) => 
-                        `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">${i + 1}位</span></li>`
+                        `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count frequency-low">出现${data.blue_freq[b.toString()] || data.blue_freq[b] || 0}次</span></li>`
                     ).join('');
 
                     let highOmissionBlues = data.high_omission_blues.map((b, i) => 
-                        `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count omission-high">遗漏${data.blue_omission[b]}期</span></li>`
+                        `<li><span class="name">蓝球${b.toString().padStart(2, '0')}</span><span class="count omission-high">遗漏${data.blue_omission[b.toString()] || data.blue_omission[b] || 0}期</span></li>`
                     ).join('');
 
                     let intervalHtml = Object.entries(data.interval).map(([name, stats]) => `
@@ -1053,15 +1090,15 @@ def api_predict():
     result_a = analyzer.predict_red_balls(return_dict=True)
     red_balls_a = result_a["balls"]
     red_reasons_a = result_a["reasons"]
-    blue_ball_a = analyzer.predict_blue_ball()
-    blue_options_a = analyzer.predict_blue_options(5)
+    blue_ball_a, blue_reasons_a = analyzer.predict_blue_ball()
+    blue_options_a, blue_options_reasons_a = analyzer.predict_blue_options(5)
     features_a = analyzer.analyze_prediction_features(red_balls_a, blue_ball_a)
     
     result_b = analyzer.predict_red_balls_advanced(exclude_balls=red_balls_a)
     red_balls_b = result_b["balls"]
     red_reasons_b = result_b["reasons"]
-    blue_ball_b = analyzer.predict_blue_ball_advanced(exclude_ball=blue_ball_a)
-    blue_options_b = analyzer.predict_blue_options(5)
+    blue_ball_b, blue_reasons_b = analyzer.predict_blue_ball_advanced(exclude_ball=blue_ball_a)
+    blue_options_b, blue_options_reasons_b = analyzer.predict_blue_options(5)
     features_b = analyzer.analyze_prediction_features(red_balls_b, blue_ball_b)
     
     overlap = len(set(red_balls_a) & set(red_balls_b))
@@ -1075,7 +1112,9 @@ def api_predict():
             "red_balls": red_balls_a,
             "red_reasons": red_reasons_a,
             "blue_ball": blue_ball_a,
+            "blue_reason": blue_reasons_a.get(blue_ball_a, ""),
             "blue_options": blue_options_a,
+            "blue_options_reasons": {b: blue_options_reasons_a.get(b, "") for b in blue_options_a},
             "features": features_a
         },
         "prediction_b": {
@@ -1084,7 +1123,9 @@ def api_predict():
             "red_balls": red_balls_b,
             "red_reasons": red_reasons_b,
             "blue_ball": blue_ball_b,
+            "blue_reason": blue_reasons_b.get(blue_ball_b, ""),
             "blue_options": blue_options_b,
+            "blue_options_reasons": {b: blue_options_reasons_b.get(b, "") for b in blue_options_b},
             "features": features_b
         },
         "overlap": overlap
@@ -1204,6 +1245,8 @@ def api_analysis():
         "high_omission_blues": analyzer.get_high_omission_blue(3),
         "red_omission": analyzer.red_omission,
         "blue_omission": analyzer.blue_omission,
+        "red_freq": analyzer.red_freq,
+        "blue_freq": analyzer.blue_freq,
         "interval": interval_data,
         "parity": {"avg": parity["平均奇数"], "mode": parity["众数奇数"]},
         "size": {"avg": size["平均大数"], "mode": size["众数大数"]}
