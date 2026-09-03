@@ -113,8 +113,11 @@ HTML_TEMPLATE = """
         #historyAnalysis { width: 30%; }
         .btn.active { background: #e74c3c; color: white; border-color: #e74c3c; }
         .btn-period-10.active { background: #27ae60; border-color: #27ae60; }
+        .btn-period-20.active { background: #16a085; border-color: #16a085; }
         .btn-period-30.active { background: #3498db; border-color: #3498db; }
         .btn-period-50.active { background: #9b59b6; border-color: #9b59b6; }
+        .btn-period-80.active { background: #f39c12; border-color: #f39c12; }
+        .btn-period-100.active { background: #e67e22; border-color: #e67e22; }
         .btn-period-all.active { background: #e74c3c; border-color: #e74c3c; }
         .trend-container { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; table-layout: fixed; width: 100%; }
         .trend-header-row { display: table-row; background: #f8f9fa; border-bottom: 1px solid #ddd; }
@@ -123,8 +126,9 @@ HTML_TEMPLATE = """
         .trend-period { display: table-cell; width: 85px; padding: 4px 6px; text-align: right; font-size: 0.75rem; color: #333; border-right: 1px solid #eee; white-space: nowrap; vertical-align: middle; }
         .trend-red-area { display: table-cell; width: 65%; }
         .trend-blue-area { display: table-cell; width: 28%; border-left: 1px solid #eee; }
-        .trend-red-inner, .trend-blue-inner { display: flex; width: 100%; }
-        .trend-cell { flex: 1; min-width: 20px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; border-right: 1px solid #f5f5f5; }
+        .trend-red-inner { display: grid; grid-template-columns: repeat(33, 1fr); width: 100%; }
+        .trend-blue-inner { display: grid; grid-template-columns: repeat(16, 1fr); width: 100%; }
+        .trend-cell { height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; border-right: 1px solid #f5f5f5; box-sizing: border-box; }
         .trend-header-row .trend-cell { font-weight: 600; font-size: 0.6rem; color: #666; }
         .trend-cell:last-child { border-right: none; }
         .trend-cell.red { background: #e74c3c; color: white; font-weight: bold; border-radius: 4px; margin: 2px; }
@@ -183,7 +187,204 @@ HTML_TEMPLATE = """
             .header { flex-direction: column; gap: 10px; align-items: flex-start; }
             .header-right { width: 100%; justify-content: space-between; }
         }
+        /* 全息球体 - Three.js 科幻风格 */
+        .hologram-container {
+            background: #050a14;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        .hologram-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                linear-gradient(rgba(0,255,204,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,204,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .hologram-header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .hologram-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00ffcc;
+            text-shadow: 0 0 20px rgba(0,255,204,0.5), 0 0 40px rgba(0,255,204,0.2);
+            letter-spacing: 4px;
+        }
+        .hologram-subtitle {
+            font-size: 0.75rem;
+            color: #00aaff;
+            letter-spacing: 6px;
+            margin-top: 6px;
+            opacity: 0.7;
+        }
+        .hologram-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .holo-btn {
+            background: rgba(0,170,255,0.1);
+            border: 1px solid rgba(0,170,255,0.3);
+            color: #00aaff;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+            letter-spacing: 2px;
+        }
+        .holo-btn:hover {
+            background: rgba(0,170,255,0.2);
+            border-color: #00aaff;
+            box-shadow: 0 0 15px rgba(0,170,255,0.3);
+        }
+        .holo-btn.active {
+            background: rgba(0,255,204,0.15);
+            border-color: #00ffcc;
+            color: #00ffcc;
+            box-shadow: 0 0 15px rgba(0,255,204,0.3);
+        }
+        #three-container {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(0,255,204,0.1);
+            box-shadow: inset 0 0 40px rgba(0,255,204,0.05);
+        }
+        #three-container canvas {
+            display: block;
+        }
+        .hologram-tooltip {
+            position: absolute;
+            background: rgba(5,10,20,0.97);
+            border: 1px solid rgba(0,255,204,0.35);
+            border-radius: 4px;
+            padding: 0;
+            z-index: 200;
+            box-shadow: 0 0 25px rgba(0,255,204,0.12);
+            backdrop-filter: blur(12px);
+            font-size: 0.78rem;
+            color: #aaccff;
+            line-height: 1.5;
+            min-width: 240px;
+            max-width: 280px;
+            transition: opacity 0.12s;
+            overflow: hidden;
+        }
+        .hologram-tooltip .tt-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            color: #5588aa;
+            font-size: 1rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: color 0.2s;
+        }
+        .hologram-tooltip .tt-close:hover { color: #ff3366; }
+        .hologram-tooltip .tt-header {
+            background: rgba(0,255,204,0.08);
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(0,255,204,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hologram-tooltip .tt-header-title {
+            font-size: 1.05rem;
+            color: #00ffcc;
+            font-weight: bold;
+            letter-spacing: 1px;
+            font-family: 'Courier New', monospace;
+        }
+        .hologram-tooltip .tt-header-tag {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            border: 1px solid;
+        }
+        .hologram-tooltip .tt-header-tag.hot { background: rgba(255,0,51,0.15); color: #ff3366; border-color: rgba(255,0,51,0.3); }
+        .hologram-tooltip .tt-header-tag.cold { background: rgba(0,170,255,0.15); color: #00ccff; border-color: rgba(0,170,255,0.3); }
+        .hologram-tooltip .tt-header-tag.warm { background: rgba(255,204,0,0.15); color: #ffcc00; border-color: rgba(255,204,0,0.3); }
+        .hologram-tooltip .tt-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .hologram-tooltip .tt-table tr {
+            border-bottom: 1px solid rgba(0,170,255,0.08);
+        }
+        .hologram-tooltip .tt-table tr:last-child { border-bottom: none; }
+        .hologram-tooltip .tt-table td {
+            padding: 7px 14px;
+        }
+        .hologram-tooltip .tt-table td:first-child {
+            color: #5588aa;
+            width: 40%;
+            font-size: 0.75rem;
+        }
+        .hologram-tooltip .tt-table td:last-child {
+            color: #00ffcc;
+            font-weight: bold;
+            text-align: right;
+            font-size: 0.8rem;
+            font-family: 'Courier New', monospace;
+        }
+        .hologram-tooltip .tt-table td:last-child.hot { color: #ff3366; }
+        .hologram-tooltip .tt-table td:last-child.cold { color: #00ccff; }
+        .hologram-tooltip .tt-footer {
+            padding: 8px 14px;
+            border-top: 1px solid rgba(0,255,204,0.15);
+            font-size: 0.7rem;
+            color: #5588aa;
+        }
+        .hologram-tooltip .tt-footer span {
+            color: #00aaff;
+        }
+        .hologram-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #5588aa;
+            font-size: 0.8rem;
+        }
+        .legend-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+        }
+        .legend-dot.red { background: #ff0033; box-shadow: 0 0 8px rgba(255,0,51,0.5); }
+        .legend-dot.blue { background: #00aaff; box-shadow: 0 0 8px rgba(0,170,255,0.5); }
     </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -210,6 +411,7 @@ HTML_TEMPLATE = """
         <div class="tabs">
             <button class="tab active" onclick="showTab('predict')">号码预测</button>
             <button class="tab" onclick="showTab('history')">历史数据</button>
+            <button class="tab" onclick="showTab('hologram')">全息球体</button>
             <button class="tab" onclick="showTab('update')">数据更新</button>
         </div>
 
@@ -218,15 +420,34 @@ HTML_TEMPLATE = """
                 <div class="main-content">
                     <div class="predict-panel">
                         <div class="btn-group">
-                            <button class="btn" onclick="doPredict()">
-                                <span class="loading" id="predictLoading" style="display:none;"></span>
-                                生成预测
+                            <button class="btn btn-secondary btn-period-10" onclick="selectPeriod(10)">
+                                <span class="loading" id="loading-10" style="display:none;"></span>
+                                近10期
                             </button>
-                            
-                            <button class="btn btn-secondary btn-period-10" onclick="selectPeriod(10)">近10期</button>
-                            <button class="btn btn-secondary btn-period-30" onclick="selectPeriod(30)">近30期</button>
-                            <button class="btn btn-secondary btn-period-50" onclick="selectPeriod(50)">近50期</button>
-                            <button class="btn btn-secondary btn-period-all" onclick="selectPeriod(0)">全部数据</button>
+                            <button class="btn btn-secondary btn-period-20" onclick="selectPeriod(20)">
+                                <span class="loading" id="loading-20" style="display:none;"></span>
+                                近20期
+                            </button>
+                            <button class="btn btn-secondary btn-period-30" onclick="selectPeriod(30)">
+                                <span class="loading" id="loading-30" style="display:none;"></span>
+                                近30期
+                            </button>
+                            <button class="btn btn-secondary btn-period-50" onclick="selectPeriod(50)">
+                                <span class="loading" id="loading-50" style="display:none;"></span>
+                                近50期
+                            </button>
+                            <button class="btn btn-secondary btn-period-80" onclick="selectPeriod(80)">
+                                <span class="loading" id="loading-80" style="display:none;"></span>
+                                近80期
+                            </button>
+                            <button class="btn btn-secondary btn-period-100" onclick="selectPeriod(100)">
+                                <span class="loading" id="loading-100" style="display:none;"></span>
+                                近100期
+                            </button>
+                            <button class="btn btn-secondary btn-period-all active" onclick="selectPeriod(0)">
+                                <span class="loading" id="loading-0" style="display:none;"></span>
+                                全部数据
+                            </button>
                         </div>
                         
                         <div id="predictionResult"></div>
@@ -259,6 +480,29 @@ HTML_TEMPLATE = """
                 <div class="history-main">
                     <div id="historyContent"></div>
                     <div id="historyAnalysis"></div>
+                </div>
+            </div>
+
+            <div class="section" id="hologram">
+                <div class="hologram-container">
+                    <div class="hologram-header">
+                        <div class="hologram-title">双色球全息分析矩阵</div>
+                        <div class="hologram-subtitle">SSQ HOLOGRAPHIC ANALYSIS MATRIX v3.0</div>
+                    </div>
+                    <div class="hologram-controls">
+                        <button class="holo-btn active" onclick="loadHologram(10)">近10期</button>
+                        <button class="holo-btn" onclick="loadHologram(30)">近30期</button>
+                        <button class="holo-btn" onclick="loadHologram(50)">近50期</button>
+                        <button class="holo-btn" onclick="loadHologram(0)">全部数据</button>
+                    </div>
+                    <div id="three-container" style="width:100%;height:650px;position:relative;"></div>
+                    <div id="hologram-tooltip" class="hologram-tooltip" style="display:none;"></div>
+                    <div class="hologram-legend">
+                        <div class="legend-item"><div class="legend-dot red"></div>红球(33个)</div>
+                        <div class="legend-item"><div class="legend-dot blue"></div>蓝球(16个)</div>
+                        <div class="legend-item"><span style="color:#ff3366;">◉</span> 高遗漏脉动</div>
+                        <div class="legend-item"><span style="color:#00ffcc;">━━</span> 关联连线</div>
+                    </div>
                 </div>
             </div>
 
@@ -297,6 +541,8 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
+        let currentPeriod = 0;
+        
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -304,10 +550,11 @@ HTML_TEMPLATE = """
             document.getElementById(tabName).classList.add('active');
             
             if (tabName === 'predict') {
-                loadPrediction();
-                loadAnalysis();
+                loadPrediction(currentPeriod);
+                loadAnalysis(currentPeriod);
             }
             if (tabName === 'history') showHistory(10);
+            if (tabName === 'hologram') loadHologram(10);
             refreshStats();
         }
 
@@ -480,31 +727,43 @@ HTML_TEMPLATE = """
         }
 
         function selectPeriod(limit) {
+            currentPeriod = limit;
+            
             document.querySelectorAll('.btn-period-10').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.btn-period-20').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.btn-period-30').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.btn-period-50').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.btn-period-80').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.btn-period-100').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.btn-period-all').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`loading-${limit}`).style.display = 'inline-block';
             
             if (limit === 10) {
                 document.querySelectorAll('.btn-period-10').forEach(b => b.classList.add('active'));
+            } else if (limit === 20) {
+                document.querySelectorAll('.btn-period-20').forEach(b => b.classList.add('active'));
             } else if (limit === 30) {
                 document.querySelectorAll('.btn-period-30').forEach(b => b.classList.add('active'));
             } else if (limit === 50) {
                 document.querySelectorAll('.btn-period-50').forEach(b => b.classList.add('active'));
+            } else if (limit === 80) {
+                document.querySelectorAll('.btn-period-80').forEach(b => b.classList.add('active'));
+            } else if (limit === 100) {
+                document.querySelectorAll('.btn-period-100').forEach(b => b.classList.add('active'));
             } else {
                 document.querySelectorAll('.btn-period-all').forEach(b => b.classList.add('active'));
             }
             
-            doPredict(limit);
+            loadPrediction(limit);
             loadAnalysis(limit);
+            
+            setTimeout(() => {
+                document.getElementById(`loading-${limit}`).style.display = 'none';
+            }, 500);
         }
 
-        function doPredict(limit=0) {
-            let loading = document.getElementById('predictLoading');
-            loading.style.display = 'inline-block';
-            loadPrediction(limit);
-            setTimeout(() => loading.style.display = 'none', 500);
-        }
+
 
         function showHistory(limit) {
             let url = limit > 0 ? `/api/history?limit=${limit}` : '/api/history';
@@ -1034,12 +1293,338 @@ HTML_TEMPLATE = """
             loadPrediction();
         }
 
+        /* 全息球体系统 */
+        let currentHoloLimit = 10;
+
+        function loadHologram(limit) {
+            currentHoloLimit = limit;
+            document.querySelectorAll('.holo-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            let url = limit > 0 ? `/api/ball-details?limit=${limit}&t=${Date.now()}` : `/api/ball-details?t=${Date.now()}`;
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && window.initThreeJS) {
+                        window.initThreeJS(data);
+                    }
+                })
+                .catch(e => console.error(e));
+        }
+
         window.onload = function() {
             refreshStats();
             loadPrediction();
             loadAnalysis();
         };
     </script>
+    
+    <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    
+    let threeScene, threeCamera, threeRenderer, threeComposer, threeControls;
+    let ballMeshes = [], connectionLines = [];
+    let raycaster, mouse, hoveredBall, animationId;
+    
+    window.initThreeJS = async function(data) {
+        if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+        
+        const container = document.getElementById('three-container');
+        if (!container) return;
+        while (container.firstChild) container.removeChild(container.firstChild);
+        ballMeshes = []; connectionLines = [];
+        
+        const width = container.clientWidth || 900;
+        const height = container.clientHeight || 650;
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050a14);
+        scene.fog = new THREE.FogExp2(0x050a14, 0.035);
+        threeScene = scene;
+        
+        const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+        camera.position.set(0, 0, 14);
+        threeCamera = camera;
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+        threeRenderer = renderer;
+        
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 0.4, 0.3, 0.85);
+        composer.addPass(bloomPass);
+        threeComposer = composer;
+        
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.6;
+        threeControls = controls;
+        
+        // 粒子星空
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = 3000;
+        const posArr = new Float32Array(starsCount * 3);
+        for (let i = 0; i < starsCount * 3; i++) posArr[i] = (Math.random() - 0.5) * 80;
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+        const starsMat = new THREE.PointsMaterial({ size: 0.05, color: 0x00ffcc, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+        scene.add(new THREE.Points(starsGeo, starsMat));
+        
+        // 环境光
+        scene.add(new THREE.AmbientLight(0x111122, 0.5));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, 5, 5);
+        scene.add(dirLight);
+        
+        // 红球
+        const maxRedFreq = Math.max(...data.red_balls.map(b => b.freq), 1);
+        data.red_balls.forEach(ball => {
+            const size = 0.32 + (ball.freq / maxRedFreq) * 0.28;
+            const group = new THREE.Group();
+            const ballOnly = new THREE.Group();
+            const geo = new THREE.SphereGeometry(size, 32, 32);
+            const baseColor = ball.category === 'hot' ? 0xff0033 : (ball.category === 'cold' ? 0x660022 : 0xcc0033);
+            const mat = new THREE.MeshStandardMaterial({
+                color: baseColor, emissive: baseColor, emissiveIntensity: ball.omission >= 10 ? 1.2 : 0.6,
+                roughness: 0.4, metalness: 0.6
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            ballOnly.add(mesh);
+            group.add(ballOnly);
+            
+            const labelCanvas = document.createElement('canvas');
+            labelCanvas.width = 256; labelCanvas.height = 256;
+            const ctx = labelCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 256);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 140px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(ball.number.toString().padStart(2, '0'), 128, 138);
+            const labelTex = new THREE.CanvasTexture(labelCanvas);
+            labelTex.minFilter = THREE.LinearFilter;
+            const labelMat = new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false, depthTest: false });
+            const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.5, size * 1.5), labelMat);
+            labelMesh.position.z = size * 1.05;
+            labelMesh.renderOrder = 999;
+            group.add(labelMesh);
+            
+            group.position.set(ball.x, ball.y, ball.z);
+            group.userData = { type: 'red', ...ball, labelMesh, ballOnly };
+            scene.add(group); ballMeshes.push(group);
+            
+            if (ball.omission >= 10) {
+                const ringGeo = new THREE.RingGeometry(size * 1.3, size * 1.55, 32);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0xff0033, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.position.copy(group.position);
+                ring.lookAt(0, 0, 0);
+                ring.userData = { isPulseRing: true, parentBall: group };
+                scene.add(ring); ballMeshes.push(ring);
+            }
+        });
+        
+        // 蓝球
+        const maxBlueFreq = Math.max(...data.blue_balls.map(b => b.freq), 1);
+        data.blue_balls.forEach(ball => {
+            const size = 0.30 + (ball.freq / maxBlueFreq) * 0.24;
+            const group = new THREE.Group();
+            const ballOnly = new THREE.Group();
+            const geo = new THREE.SphereGeometry(size, 32, 32);
+            const baseColor = ball.category === 'hot' ? 0x00ccff : (ball.category === 'cold' ? 0x003366 : 0x0088cc);
+            const mat = new THREE.MeshStandardMaterial({
+                color: baseColor, emissive: baseColor, emissiveIntensity: ball.omission >= 8 ? 1.2 : 0.6,
+                roughness: 0.4, metalness: 0.6
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            ballOnly.add(mesh);
+            group.add(ballOnly);
+            
+            const labelCanvas = document.createElement('canvas');
+            labelCanvas.width = 256; labelCanvas.height = 256;
+            const ctx = labelCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 256);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 140px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(ball.number.toString().padStart(2, '0'), 128, 138);
+            const labelTex = new THREE.CanvasTexture(labelCanvas);
+            labelTex.minFilter = THREE.LinearFilter;
+            const labelMat = new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false, depthTest: false });
+            const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.5, size * 1.5), labelMat);
+            labelMesh.position.z = size * 1.05;
+            labelMesh.renderOrder = 999;
+            group.add(labelMesh);
+            
+            group.position.set(ball.x, ball.y, ball.z);
+            group.userData = { type: 'blue', ...ball, labelMesh, ballOnly };
+            scene.add(group); ballMeshes.push(group);
+            
+            if (ball.omission >= 8) {
+                const ringGeo = new THREE.RingGeometry(size * 1.3, size * 1.55, 32);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.position.copy(group.position);
+                ring.lookAt(0, 0, 0);
+                ring.userData = { isPulseRing: true, parentBall: group };
+                scene.add(ring); ballMeshes.push(ring);
+            }
+        });
+        
+        // 红球间关联连线
+        data.red_connections.forEach(conn => {
+            const s = data.red_balls.find(b => b.number === conn.source);
+            const t = data.red_balls.find(b => b.number === conn.target);
+            if (s && t) {
+                const pts = [new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(t.x, t.y, t.z)];
+                const geo = new THREE.BufferGeometry().setFromPoints(pts);
+                const mat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: conn.strength * 0.7 });
+                const line = new THREE.Line(geo, mat);
+                scene.add(line);
+                connectionLines.push({ line, material: mat, strength: conn.strength });
+            }
+        });
+        
+        // 蓝红关联连线
+        data.blue_connections.forEach(conn => {
+            const r = data.red_balls.find(b => b.number === conn.red);
+            const b = data.blue_balls.find(b => b.number === conn.blue);
+            if (r && b) {
+                const pts = [new THREE.Vector3(r.x, r.y, r.z), new THREE.Vector3(b.x, b.y, b.z)];
+                const geo = new THREE.BufferGeometry().setFromPoints(pts);
+                const mat = new THREE.LineBasicMaterial({ color: 0xff66aa, transparent: true, opacity: conn.strength * 0.5 });
+                const line = new THREE.Line(geo, mat);
+                scene.add(line);
+                connectionLines.push({ line, material: mat, strength: conn.strength });
+            }
+        });
+        
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+        let selectedBall = null;
+        
+        renderer.domElement.addEventListener('click', onBallClick);
+        renderer.domElement.addEventListener('mousemove', onBallHover);
+        window.addEventListener('resize', onWindowResize);
+        
+        // 点击外部或关闭按钮关闭面板
+        document.addEventListener('click', (e) => {
+            const tooltip = document.getElementById('hologram-tooltip');
+            if (tooltip && tooltip.style.display === 'block' && !tooltip.contains(e.target) && e.target.tagName !== 'CANVAS') {
+                hideTooltip();
+                selectedBall = null;
+            }
+        });
+        
+        function onBallHover(e) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const list = ballMeshes.filter(m => m.userData && m.userData.number && !m.userData.isPulseRing);
+            const intersects = raycaster.intersectObjects(list);
+            document.body.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+        }
+        
+        function onBallClick(e) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const list = ballMeshes.filter(m => m.userData && m.userData.number && !m.userData.isPulseRing);
+            const intersects = raycaster.intersectObjects(list);
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                selectedBall = obj;
+                showTooltip(obj.userData, e.clientX, e.clientY);
+            } else {
+                hideTooltip();
+                selectedBall = null;
+            }
+        }
+        
+        function onWindowResize() {
+            const w = container.clientWidth, h = container.clientHeight;
+            camera.aspect = w / h; camera.updateProjectionMatrix();
+            renderer.setSize(w, h); composer.setSize(w, h);
+        }
+        
+        const clock = new THREE.Clock();
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+            controls.update();
+            
+            ballMeshes.forEach(mesh => {
+                if (mesh.userData.isPulseRing) {
+                    const s = 1 + Math.sin(time * 3) * 0.2;
+                    mesh.scale.set(s, s, s);
+                    mesh.material.opacity = 0.25 + Math.sin(time * 3) * 0.15;
+                } else if (mesh.userData.labelMesh) {
+                    // 数字始终面向相机
+                    mesh.userData.labelMesh.lookAt(camera.position);
+                }
+            });
+            
+            connectionLines.forEach((conn, i) => {
+                conn.material.opacity = conn.strength * (0.3 + Math.sin(time * 2 + i * 0.5) * 0.25);
+            });
+            
+            composer.render();
+        }
+        animate();
+    };
+    
+    function showTooltip(ball, x, y) {
+        const tooltip = document.getElementById('hologram-tooltip');
+        if (!tooltip) return;
+        const typeName = ball.type === 'red' ? '红球' : '蓝球';
+        const tagClass = ball.category;
+        const tagText = ball.category === 'hot' ? '热号' : (ball.category === 'cold' ? '冷号' : '温号');
+        const omissionClass = ball.omission >= 10 ? 'hot' : (ball.omission >= 5 ? 'warm' : '');
+        tooltip.innerHTML = `
+            <span class="tt-close" onclick="window.hideHoloTooltip()">✕</span>
+            <div class="tt-header">
+                <div class="tt-header-title">${typeName} ${ball.number.toString().padStart(2,'0')}</div>
+                <div class="tt-header-tag ${tagClass}">${tagText}</div>
+            </div>
+            <table class="tt-table">
+                <tr><td>出现次数</td><td>${ball.freq} 次</td></tr>
+                <tr><td>遗漏期数</td><td class="${omissionClass}">${ball.omission} 期</td></tr>
+                <tr><td>出现频率</td><td>${ball.percentage}%</td></tr>
+                <tr><td>所在区间</td><td>${ball.interval}</td></tr>
+                <tr><td>奇偶属性</td><td>${ball.parity}</td></tr>
+                <tr><td>大小属性</td><td>${ball.size}</td></tr>
+                <tr><td>尾数</td><td>${ball.tail}</td></tr>
+                <tr><td>除3余数</td><td>${ball.mod3}</td></tr>
+            </table>
+            <div class="tt-footer">近期出现: <span>${ball.last_periods.length > 0 ? ball.last_periods.join(' / ') : '无记录'}</span></div>
+        `;
+        const container = document.getElementById('three-container').getBoundingClientRect();
+        let left = x - container.left + 20, top = y - container.top + 20;
+        if (left + 260 > container.width) left = x - container.left - 270;
+        if (top + 320 > container.height) top = y - container.top - 330;
+        tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
+        tooltip.style.display = 'block'; tooltip.style.opacity = '1';
+    }
+    
+    function hideTooltip() {
+        const tooltip = document.getElementById('hologram-tooltip');
+        if (tooltip) { tooltip.style.opacity = '0'; setTimeout(() => { if (tooltip.style.opacity === '0') tooltip.style.display = 'none'; }, 150); }
+    }
+    window.hideHoloTooltip = hideTooltip;
+    </script>
+    
+    <div style="text-align:center;color:#999;font-size:0.8rem;padding:10px;">KLIM</div>
 </body>
 </html>
 """
@@ -1289,6 +1874,144 @@ def api_update():
         return json_response({
             "success": False,
             "message": str(e)
+        })
+
+
+import math
+
+@app.route('/api/ball-details')
+def api_ball_details():
+    limit = request.args.get('limit', type=int)
+    try:
+        a = get_analyzer()
+        data = a.history_data[-limit:] if limit and limit > 0 else a.history_data
+        total = len(data)
+        
+        def fibonacci_sphere(i, n, r):
+            phi = math.acos(1 - 2 * (i + 0.5) / n)
+            theta = math.pi * (1 + math.sqrt(5)) * (i + 0.5)
+            x = r * math.sin(phi) * math.cos(theta)
+            y = r * math.sin(phi) * math.sin(theta)
+            z = r * math.cos(phi)
+            return round(x, 3), round(y, 3), round(z, 3)
+        
+        def build_ball_details(number, is_red, data_slice, total_periods):
+            freq = sum(1 for d in data_slice if number in (d['reds'] if is_red else [d['blue']]))
+            
+            # 遗漏值
+            omission = 0
+            for d in reversed(a.history_data):
+                if number in (d['reds'] if is_red else [d['blue']]):
+                    break
+                omission += 1
+            
+            # 最近出现的期号（最近5期）
+            last_periods = []
+            for d in reversed(a.history_data):
+                if number in (d['reds'] if is_red else [d['blue']]):
+                    last_periods.append(str(d['period']))
+                if len(last_periods) >= 5:
+                    break
+            last_periods.reverse()
+            
+            # 冷热分类
+            if is_red:
+                hot_nums = set(a.get_hot_red_balls())
+                cold_nums = set(a.get_cold_red_balls())
+            else:
+                hot_nums = set(a.get_hot_blue_balls())
+                cold_nums = set(a.get_cold_blue_balls())
+            
+            if number in hot_nums:
+                category = 'hot'
+            elif number in cold_nums:
+                category = 'cold'
+            else:
+                category = 'warm'
+            
+            # 区间
+            if is_red:
+                interval = '第一区(01-11)' if number <= 11 else ('第二区(12-22)' if number <= 22 else '第三区(23-33)')
+            else:
+                interval = '小号(01-08)' if number <= 8 else '大号(09-16)'
+            
+            parity = '奇数' if number % 2 == 1 else '偶数'
+            size = '大号' if (number >= 17 if is_red else number >= 9) else '小号'
+            tail = str(number % 10)
+            mod3 = f"余{number % 3}"
+            percentage = round(freq / total_periods * 100, 1) if total_periods > 0 else 0
+            
+            return {
+                'number': number,
+                'freq': freq,
+                'omission': omission,
+                'category': category,
+                'last_periods': last_periods,
+                'interval': interval,
+                'parity': parity,
+                'size': size,
+                'tail': tail,
+                'mod3': mod3,
+                'percentage': percentage
+            }
+        
+        red_balls = [build_ball_details(n, True, data, total) for n in range(1, 34)]
+        blue_balls = [build_ball_details(n, False, data, total) for n in range(1, 17)]
+        
+        # 3D 坐标
+        for i, ball in enumerate(red_balls):
+            ball['x'], ball['y'], ball['z'] = fibonacci_sphere(i, 33, 5)
+        for i, ball in enumerate(blue_balls):
+            ball['x'], ball['y'], ball['z'] = fibonacci_sphere(i, 16, 2.8)
+        
+        # 计算红球间关联（同期出现频率）
+        red_connections = []
+        pair_counts = {}
+        for d in data:
+            reds = d['reds']
+            for i in range(len(reds)):
+                for j in range(i+1, len(reds)):
+                    a1, a2 = reds[i], reds[j]
+                    key = tuple(sorted([a1, a2]))
+                    pair_counts[key] = pair_counts.get(key, 0) + 1
+        
+        sorted_pairs = sorted(pair_counts.items(), key=lambda x: x[1], reverse=True)[:40]
+        for (n1, n2), count in sorted_pairs:
+            red_connections.append({
+                'source': n1,
+                'target': n2,
+                'strength': round(count / total, 2)
+            })
+        
+        # 计算蓝球与红球关联
+        blue_connections = []
+        blue_pair_counts = {}
+        for d in data:
+            blue = d['blue']
+            for red in d['reds']:
+                key = (red, blue)
+                blue_pair_counts[key] = blue_pair_counts.get(key, 0) + 1
+        
+        sorted_blue_pairs = sorted(blue_pair_counts.items(), key=lambda x: x[1], reverse=True)[:30]
+        for (red, blue), count in sorted_blue_pairs:
+            blue_connections.append({
+                'red': red,
+                'blue': blue,
+                'strength': round(count / total, 2)
+            })
+        
+        return json_response({
+            'success': True,
+            'total_periods': total,
+            'red_balls': red_balls,
+            'blue_balls': blue_balls,
+            'red_connections': red_connections,
+            'blue_connections': blue_connections
+        })
+    except Exception as e:
+        return json_response({
+            'success': False,
+            'message': str(e)
         })
 
 

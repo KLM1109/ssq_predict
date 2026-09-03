@@ -533,6 +533,8 @@
                 <div class="nav-item" onclick="switchTab('exam')">🎯 模拟考试</div>
                 <div class="nav-item" onclick="switchTab('wrong')">❌ 错题集</div>
                 <div class="nav-item" onclick="switchTab('review')">📋 复习进度</div>
+                <div class="nav-item" onclick="switchTab('knowledge')">📖 知识点复习</div>
+                <div class="nav-item" onclick="switchTab('guide')">📝 题型解读</div>
 
                 <div class="stats">
                     <h4>📊 学习统计</h4>
@@ -595,11 +597,315 @@
                     <h3 style="margin-bottom: 20px;">📋 复习进度</h3>
                     <div id="review-container"></div>
                 </div>
+
+                <div id="tab-knowledge" class="tab-content">
+                    <h3 style="margin-bottom: 20px;">📖 知识点复习</h3>
+                    <div class="filter-tabs" style="margin-bottom: 25px;">
+                        <div class="filter-tab active" onclick="filterKnowledge('all')">全部</div>
+                        <div class="filter-tab" onclick="filterKnowledge('基础')">通信基础</div>
+                        <div class="filter-tab" onclick="filterKnowledge('传输')">传输系统</div>
+                        <div class="filter-tab" onclick="filterKnowledge('交换')">交换技术</div>
+                        <div class="filter-tab" onclick="filterKnowledge('接入')">接入网</div>
+                        <div class="filter-tab" onclick="filterKnowledge('移动')">移动通信</div>
+                        <div class="filter-tab" onclick="filterKnowledge('数据')">数据通信</div>
+                    </div>
+                    <div id="knowledge-container"></div>
+                </div>
+
+                <div id="tab-guide" class="tab-content">
+                    <h3 style="margin-bottom: 20px;">📝 初级考试题型解读</h3>
+                    <div id="guide-container"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        const knowledgePoints = [
+            {
+                id: 1,
+                category: '基础',
+                chapter: '通信基础',
+                title: 'OSI七层模型',
+                content: 'OSI（Open Systems Interconnection）参考模型将网络通信功能划分为七层，从下到上依次为：物理层、数据链路层、网络层、传输层、会话层、表示层、应用层。每层负责特定的功能，并通过接口与相邻层通信。',
+                keyPoints: ['物理层：负责物理介质上的比特传输', '数据链路层：负责帧的传输和差错控制', '网络层：负责路由和分组转发', '传输层：负责端到端的可靠传输', '应用层：为应用程序提供网络服务']
+            },
+            {
+                id: 2,
+                category: '基础',
+                chapter: '通信基础',
+                title: 'TCP/IP协议栈',
+                content: 'TCP/IP协议栈是互联网的核心协议套件，分为四层：网络接口层、网络层（IP）、传输层（TCP/UDP）、应用层。TCP提供面向连接的可靠传输，UDP提供无连接的不可靠传输。',
+                keyPoints: ['IP协议：负责分组路由和转发', 'TCP协议：可靠的面向连接传输', 'UDP协议：无连接的快速传输', 'HTTP/FTP/DNS：应用层协议']
+            },
+            {
+                id: 3,
+                category: '基础',
+                chapter: '通信基础',
+                title: '调制与编码',
+                content: '调制是将数字信号转换为模拟信号的过程，常见方式包括ASK、FSK、PSK、QAM等。编码是将模拟信号转换为数字信号的过程，如PCM编码。',
+                keyPoints: ['ASK：幅移键控', 'FSK：频移键控', 'PSK：相移键控', 'QAM：正交幅度调制', 'PCM：脉冲编码调制']
+            },
+            {
+                id: 4,
+                category: '基础',
+                chapter: '通信基础',
+                title: '多路复用技术',
+                content: '多路复用技术允许多个信号共享同一传输介质，提高传输效率。常见方式包括频分复用（FDM）、时分复用（TDM）、波分复用（WDM）、码分复用（CDM）。',
+                keyPoints: ['FDM：按频率划分信道', 'TDM：按时间划分信道', 'WDM：光纤通信中的波分复用', 'CDM：码分多址']
+            },
+            {
+                id: 5,
+                category: '传输',
+                chapter: '传输系统',
+                title: '光纤通信系统',
+                content: '光纤通信系统由光发射机、光纤、光接收机组成。光纤具有低损耗、高带宽、抗电磁干扰等优点，是现代通信的主要传输介质。',
+                keyPoints: ['工作波长：850nm、1310nm、1550nm', '单模光纤：纤芯直径约9μm，传输距离远', '多模光纤：纤芯直径50/62.5μm，传输距离近', '光放大器：EDFA用于长距离传输']
+            },
+            {
+                id: 6,
+                category: '传输',
+                chapter: '传输系统',
+                title: 'SDH同步数字体系',
+                content: 'SDH是一种标准化的数字传输体系，具有统一的帧结构和传输速率等级。STM-1是基本速率等级，速率为155.520 Mbit/s。',
+                keyPoints: ['STM-1：155.520 Mbit/s', 'STM-4：622.080 Mbit/s', 'STM-16：2.488 Gbit/s', '帧结构：9行×270列']
+            },
+            {
+                id: 7,
+                category: '传输',
+                chapter: '传输系统',
+                title: 'WDM波分复用',
+                content: 'WDM技术在一根光纤中同时传输多个不同波长的光信号，每个波长承载一路独立的信号。密集波分复用（DWDM）可复用更多波长。',
+                keyPoints: ['单根光纤传输多个波长', 'DWDM：波长间隔窄，复用密度高', 'C波段：1530-1565nm', 'L波段：1565-1625nm']
+            },
+            {
+                id: 8,
+                category: '传输',
+                chapter: '传输系统',
+                title: '微波与卫星通信',
+                content: '微波通信利用微波频段进行通信，卫星通信利用人造卫星作为中继站。卫星通信覆盖范围广，适用于广播和远距离通信。',
+                keyPoints: ['同步卫星：轨道高度约35786km', '自由空间损耗：与距离平方和频率平方成正比', 'Ka频段：频率高，损耗大，带宽大', '雨衰：影响卫星通信质量']
+            },
+            {
+                id: 9,
+                category: '交换',
+                chapter: '交换技术',
+                title: '电路交换',
+                content: '电路交换在通信前建立专用的物理连接，通信期间独占资源。特点是时延小、实时性好，但资源利用率低。',
+                keyPoints: ['面向连接', '资源独占', '时延固定', '适用于语音业务']
+            },
+            {
+                id: 10,
+                category: '交换',
+                chapter: '交换技术',
+                title: '分组交换',
+                content: '分组交换将数据分割成分组进行传输，每个分组独立路由。特点是资源共享、灵活高效，但存在时延抖动。',
+                keyPoints: ['无连接或面向连接', '资源共享', '统计复用', '适用于数据业务']
+            },
+            {
+                id: 11,
+                category: '交换',
+                chapter: '交换技术',
+                title: '软交换与IMS',
+                content: '软交换将呼叫控制与媒体网关分离，IMS（IP多媒体子系统）提供基于IP的多媒体业务。两者共同构成下一代网络的核心。',
+                keyPoints: ['软交换：控制与承载分离', 'IMS：IP多媒体子系统', 'SIP：会话初始协议', '统一通信：语音、视频、数据融合']
+            },
+            {
+                id: 12,
+                category: '接入',
+                chapter: '接入网',
+                title: 'xDSL技术',
+                content: 'xDSL（数字用户线）技术利用现有电话线提供高速数据传输。ADSL是非对称的，上行速率低于下行速率。',
+                keyPoints: ['ADSL：非对称数字用户线', '上行：最高1Mbps', '下行：最高24Mbps', 'VDSL：更高速率的DSL技术']
+            },
+            {
+                id: 13,
+                category: '接入',
+                chapter: '接入网',
+                title: 'FTTx光纤接入',
+                content: 'FTTx（光纤到x）是光纤接入技术的统称，包括FTTH（光纤到户）、FTTB（光纤到楼）、FTTC（光纤到路边）等。',
+                keyPoints: ['FTTH：光纤直接到户', 'PON：无源光网络', 'GPON：吉比特无源光网络', 'EPON：以太网无源光网络']
+            },
+            {
+                id: 14,
+                category: '接入',
+                chapter: '接入网',
+                title: '无线接入技术',
+                content: '无线接入技术包括WiFi（802.11系列）、4G LTE、5G、蓝牙等。WiFi使用2.4GHz和5GHz频段，提供高速无线局域网接入。',
+                keyPoints: ['802.11a：5GHz，54Mbps', '802.11g：2.4GHz，54Mbps', '802.11n：双频段，300Mbps+', '802.11ac：5GHz，1Gbps+']
+            },
+            {
+                id: 15,
+                category: '移动',
+                chapter: '移动通信',
+                title: 'GSM系统',
+                content: 'GSM（全球移动通信系统）是第二代移动通信标准，采用TDMA多址方式，支持语音和数据业务。',
+                keyPoints: ['TDMA：时分多址', '900MHz/1800MHz频段', 'GPRS：通用分组无线业务', 'EDGE：增强型数据速率GSM演进']
+            },
+            {
+                id: 16,
+                category: '移动',
+                chapter: '移动通信',
+                title: 'CDMA与3G',
+                content: 'CDMA（码分多址）是3G的核心技术，包括CDMA2000和WCDMA。CDMA具有抗干扰能力强、频谱效率高等优点。',
+                keyPoints: ['CDMA2000：美国标准', 'WCDMA：欧洲标准', '码分多址：利用伪随机码区分用户', '软切换：无缝切换']
+            },
+            {
+                id: 17,
+                category: '移动',
+                chapter: '移动通信',
+                title: 'LTE与4G',
+                content: 'LTE（长期演进）是4G标准，采用OFDM和MIMO技术，提供高速数据传输。LTE分为FDD-LTE和TDD-LTE两种模式。',
+                keyPoints: ['OFDM：正交频分复用', 'MIMO：多输入多输出', '下行：150Mbps', '上行：40Mbps']
+            },
+            {
+                id: 18,
+                category: '移动',
+                chapter: '移动通信',
+                title: '5G技术',
+                content: '5G是第五代移动通信技术，具有更高的速率、更低的时延、更大的容量。三大应用场景：eMBB、URLLC、mMTC。',
+                keyPoints: ['eMBB：增强移动宽带', 'URLLC：超高可靠低时延', 'mMTC：海量机器类通信', 'Massive MIMO：大规模天线', '网络切片：按需定制网络']
+            },
+            {
+                id: 19,
+                category: '数据',
+                chapter: '数据通信',
+                title: 'IP地址与子网',
+                content: 'IP地址用于标识网络中的主机，分为IPv4和IPv6。IPv4地址由32位二进制数组成，通常表示为点分十进制。',
+                keyPoints: ['A类地址：1-126', 'B类地址：128-191', 'C类地址：192-223', '私有地址：10.x.x.x、172.16-31.x.x、192.168.x.x', 'IPv6：128位地址']
+            },
+            {
+                id: 20,
+                category: '数据',
+                chapter: '数据通信',
+                title: '路由协议',
+                content: '路由协议用于在路由器之间交换路由信息，包括RIP、OSPF、BGP等。RIP是距离向量协议，OSPF是链路状态协议。',
+                keyPoints: ['RIP：距离向量，最大跳数15', 'OSPF：链路状态，无跳数限制', 'BGP：外部网关协议', 'Router ID：OSPF中路由器的唯一标识']
+            },
+            {
+                id: 21,
+                category: '数据',
+                chapter: '数据通信',
+                title: '以太网与VLAN',
+                content: '以太网是局域网的标准技术，使用CSMA/CD介质访问控制。VLAN（虚拟局域网）将物理局域网划分为多个逻辑子网。',
+                keyPoints: ['CSMA/CD：载波监听多路访问/冲突检测', 'VLAN：虚拟局域网', '默认VLAN：VLAN 1', 'Trunk：传输多个VLAN的帧']
+            },
+            {
+                id: 22,
+                category: '数据',
+                chapter: '数据通信',
+                title: '网络安全',
+                content: '网络安全包括防火墙、入侵检测、加密等技术。常见攻击包括DDoS、病毒、SQL注入、中间人攻击等。',
+                keyPoints: ['防火墙：网络边界防护', '加密：数据保护', 'DDoS：分布式拒绝服务', 'SSL/TLS：传输层安全', 'VPN：虚拟专用网络']
+            },
+            {
+                id: 23,
+                category: '基础',
+                chapter: '通信基础',
+                title: '通信法律法规',
+                content: '通信行业受《电信条例》《网络安全法》等法律法规约束。电信业务分为基础电信业务和增值电信业务，实行许可制度。',
+                keyPoints: ['电信条例：规范电信市场', '网络安全法：保障网络安全', '基础电信业务：需许可', '增值电信业务：需许可', '用户权益：知情权、选择权']
+            },
+            {
+                id: 24,
+                category: '基础',
+                chapter: '通信基础',
+                title: '通信科技职业道德',
+                content: '通信科技工作者应遵守职业道德，包括热爱专业、忠于职责、实事求是、团结协作等原则。',
+                keyPoints: ['热爱专业、忠于职责', '实事求是、严谨治学', '团结协作、勇于创新', '遵守法律法规', '保护用户隐私']
+            }
+        ];
+
+        const examGuide = {
+            overview: {
+                title: '考试概述',
+                content: '通信专业技术人员职业水平考试（初级）是国家级职业资格考试，分为《通信专业综合能力》和《通信专业实务》两个科目。考试方式为闭卷，每科考试时间180分钟，满分100分。'
+            },
+            subjects: [
+                {
+                    name: '通信专业综合能力',
+                    description: '考查通信专业基础知识、法律法规、职业道德等内容。',
+                    content: '涵盖通信基础理论、现代通信网、移动通信、互联网与物联网、通信网络安全、通信工程项目管理、法律法规、职业道德等知识领域。',
+                    questionTypes: ['单选题', '多选题', '判断题']
+                },
+                {
+                    name: '通信专业实务',
+                    description: '考查通信专业技术应用能力。',
+                    content: '涵盖通信基础、传输系统、交换技术、接入网、移动通信、数据通信、通信网络规划与维护、通信业务与应用等知识领域。',
+                    questionTypes: ['单选题', '多选题', '判断题', '填空题', '问答题']
+                }
+            ],
+            questionTypes: [
+                {
+                    type: '单选题',
+                    description: '从四个选项中选择一个正确答案',
+                    tips: '仔细阅读题干和选项，排除明显错误选项，注意选项中的关键词和限定词。单选题通常考查基本概念和定义。',
+                    examples: [
+                        { question: '在OSI七层模型中，负责端到端可靠传输的是哪一层？', answer: '传输层', analysis: '传输层提供面向连接的可靠传输服务。' },
+                        { question: 'STM-1的标准传输速率是多少？', answer: '155.520 Mbit/s', analysis: 'STM-1是SDH的基本速率等级。' }
+                    ]
+                },
+                {
+                    type: '多选题',
+                    description: '从多个选项中选择所有正确答案',
+                    tips: '多选题要求选择所有正确选项，多选或少选均不得分。建议采用排除法，先排除明显错误的选项，再仔细分析剩余选项。',
+                    examples: [
+                        { question: '以下哪些属于5G的关键技术？', answer: 'Massive MIMO、网络切片、边缘计算', analysis: '5G关键技术包括Massive MIMO、网络切片、边缘计算、超密集组网等。' },
+                        { question: 'TCP协议的特性包括哪些？', answer: '面向连接、可靠传输、流量控制', analysis: 'TCP是面向连接的可靠传输协议，具有流量控制和拥塞控制功能。' }
+                    ]
+                },
+                {
+                    type: '判断题',
+                    description: '判断题目陈述的正确性',
+                    tips: '判断题通常考查基本概念和事实。注意绝对化表述（如"所有"、"一定"、"必须"）通常是错误的，而客观陈述通常是正确的。',
+                    examples: [
+                        { question: 'TCP协议是一种面向连接的协议。', answer: '正确', analysis: 'TCP提供面向连接的可靠传输。' },
+                        { question: '光纤通信不受电磁干扰的影响。', answer: '正确', analysis: '光纤使用光信号传输，不受电磁干扰。' }
+                    ]
+                },
+                {
+                    type: '填空题',
+                    description: '根据题目要求填写正确答案',
+                    tips: '填空题要求填写准确的术语或数值。注意单位的正确性，如速率单位Mbit/s、波长单位nm等。',
+                    examples: [
+                        { question: 'SDH中，______是基本传输速率单位。', answer: 'STM-1', analysis: 'STM-1是SDH的基本速率等级。' },
+                        { question: 'IPv6基本首部长度为______字节。', answer: '40', analysis: 'IPv6基本首部固定40字节。' }
+                    ]
+                },
+                {
+                    type: '问答题',
+                    description: '根据题目要求详细回答',
+                    tips: '问答题要求全面、准确地回答问题。建议分点回答，条理清晰，重点突出。注意结合理论知识和实际应用。',
+                    examples: [
+                        { question: '简述TCP协议的三次握手过程。', answer: '第一次：客户端发送SYN；第二次：服务器返回SYN+ACK；第三次：客户端发送ACK。', analysis: '三次握手确保双方都具备发送和接收数据的能力。' },
+                        { question: '比较电路交换和分组交换的特点。', answer: '电路交换：面向连接、资源独占、时延小；分组交换：无连接、资源共享、灵活性高。', analysis: '电路交换适用于实时业务，分组交换适用于数据业务。' }
+                    ]
+                }
+            ],
+            preparationTips: [
+                {
+                    title: '制定学习计划',
+                    content: '根据考试大纲，制定合理的学习计划，分阶段复习各个知识点。建议提前3-6个月开始准备。'
+                },
+                {
+                    title: '熟悉考试大纲',
+                    content: '仔细阅读考试大纲，了解考试范围和重点内容。大纲是命题的依据，也是复习的方向。'
+                },
+                {
+                    title: '多做真题',
+                    content: '历年真题是最好的复习资料，可以帮助了解考试题型、难度和命题规律。建议至少做近5年的真题。'
+                },
+                {
+                    title: '注重理解',
+                    content: '通信技术知识点较多，建议在理解的基础上记忆，避免死记硬背。理解原理有助于灵活应用。'
+                },
+                {
+                    title: '模拟考试',
+                    content: '在考前进行模拟考试，熟悉考试流程，掌握答题时间分配。模拟考试可以帮助检验复习效果。'
+                }
+            ]
+        };
+
         const allQuestions = [
             {
                 id: 1,
@@ -1340,6 +1646,411 @@
                 options: ['双绞线', '同轴电缆', '光纤', '微波传输'],
                 answer: 2,
                 analysis: '光纤不受电磁干扰影响，抗干扰能力最强。'
+            },
+            {
+                id: 76,
+                type: 'single',
+                chapter: '通信基础',
+                question: '关于光纤通信的传输介质，以下哪项描述是正确的？',
+                options: ['传输介质是空气', '传输介质是金属导线', '传输介质是塑料光纤', '传输介质是玻璃光纤'],
+                answer: 3,
+                analysis: '光纤通信的传输介质是玻璃光纤，因其具有低损耗、高带宽等优点。'
+            },
+            {
+                id: 77,
+                type: 'single',
+                chapter: '数据通信',
+                question: '以下哪种协议用于在TCP/IP网络中实现文件传输？',
+                options: ['HTTP', 'FTP', 'SMTP', 'DNS'],
+                answer: 1,
+                analysis: 'FTP（文件传输协议）用于在TCP/IP网络中实现文件传输。'
+            },
+            {
+                id: 78,
+                type: 'single',
+                chapter: '移动通信',
+                question: '在5G通信技术中，以下哪个不是5G网络的关键技术？',
+                options: ['高频段使用', '网络切片', '大规模MIMO', '数据传输速率'],
+                answer: 3,
+                analysis: '数据传输速率是5G网络的一个性能指标，而不是关键技术。'
+            },
+            {
+                id: 79,
+                type: 'single',
+                chapter: '通信基础',
+                question: '以下哪个标准不是IEEE制定的网络通信标准？',
+                options: ['IEEE 802.3', 'IEEE 802.11', 'IEEE 802.15.4', 'ISO/OSI'],
+                answer: 3,
+                analysis: 'ISO/OSI是国际标准化组织制定的开放系统互连参考模型，不是IEEE标准。'
+            },
+            {
+                id: 80,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在SDH传输系统中，以下哪个术语表示基本传输速率？',
+                options: ['STM-1', 'STM-4', 'STM-16', 'STM-64'],
+                answer: 0,
+                analysis: 'STM-1是SDH的基本传输速率等级，速率为155.520 Mbit/s。'
+            },
+            {
+                id: 81,
+                type: 'single',
+                chapter: '数据通信',
+                question: '以下哪种拓扑结构在计算机网络中不常见？',
+                options: ['星型拓扑', '环型拓扑', '网状拓扑', '线型拓扑'],
+                answer: 3,
+                analysis: '线型拓扑在现代计算机网络中不常见，星型、环型和网状拓扑更为常用。'
+            },
+            {
+                id: 82,
+                type: 'single',
+                chapter: '通信基础',
+                question: '在OSI参考模型中，数据链路层的主要功能是？',
+                options: ['路由选择', '差错控制与流量控制', '会话管理', '数据加密'],
+                answer: 1,
+                analysis: '数据链路层负责在相邻节点间可靠地传输数据帧，主要功能包括差错检测与纠正、流量控制以及介质访问控制等。'
+            },
+            {
+                id: 83,
+                type: 'single',
+                chapter: '移动通信',
+                question: '下列哪种无线接入技术不属于4G LTE标准？',
+                options: ['OFDM', 'MIMO', 'CDMA2000', 'SCFDMA'],
+                answer: 2,
+                analysis: '4G LTE采用OFDM和MIMO技术，上行采用SCFDMA，而CDMA2000是3G技术标准。'
+            },
+            {
+                id: 84,
+                type: 'single',
+                chapter: '通信基础',
+                question: '根据《电信条例》，我国对电信业务经营实行什么制度？',
+                options: ['备案制', '许可制', '登记制', '核准制'],
+                answer: 1,
+                analysis: '《电信条例》规定，经营基础电信业务须取得基础电信业务经营许可证，实行许可制度。'
+            },
+            {
+                id: 85,
+                type: 'single',
+                chapter: '移动通信',
+                question: '在5G NR系统中，当子载波间隔为30 kHz时，一个时隙（slot）对应的毫秒数是？',
+                options: ['0.5 ms', '1 ms', '0.25 ms', '2 ms'],
+                answer: 0,
+                analysis: '5G NR中μ=1（30 kHz）时，1子帧=1 ms，1子帧含2时隙，故1时隙=0.5 ms。'
+            },
+            {
+                id: 86,
+                type: 'single',
+                chapter: '通信基础',
+                question: 'IPv6基本首部长度为？',
+                options: ['20 B', '40 B', '32 B', '60 B'],
+                answer: 1,
+                analysis: 'IPv6基本首部固定40 B，不含选项字段。'
+            },
+            {
+                id: 87,
+                type: 'single',
+                chapter: '传输系统',
+                question: '某PCM一次群速率为2.048 Mbit/s，其每帧的时隙数为？',
+                options: ['24', '32', '30', '16'],
+                answer: 1,
+                analysis: 'E1帧32时隙，其中30路话路，TS0同步，TS16信令。'
+            },
+            {
+                id: 88,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在光纤中，1550 nm窗口比1310 nm窗口的主要优势是？',
+                options: ['材料色散为零', '损耗更低', '瑞利散射更强', '模场直径更小'],
+                answer: 1,
+                analysis: '1550 nm处石英光纤损耗最低，典型0.2 dB/km，1310 nm约0.35 dB/km。'
+            },
+            {
+                id: 89,
+                type: 'single',
+                chapter: '数据通信',
+                question: 'TCP协议中，用于实现可靠传输的核心机制是？',
+                options: ['滑动窗口', '慢启动', '拥塞避免', '快速重传'],
+                answer: 0,
+                analysis: '滑动窗口同时完成流量控制与顺序可靠交付，是可靠传输的根基。'
+            },
+            {
+                id: 90,
+                type: 'single',
+                chapter: '移动通信',
+                question: '下列哪项不是5G核心网SBA架构中的网络功能？',
+                options: ['AMF', 'UPF', 'gNodeB', 'SMF'],
+                answer: 2,
+                analysis: 'gNodeB为无线侧节点，不属于核心网SBA网络功能。'
+            },
+            {
+                id: 91,
+                type: 'single',
+                chapter: '传输系统',
+                question: '在SDH中，STM-1的帧频为？',
+                options: ['1000帧/秒', '8000帧/秒', '4000帧/秒', '125帧/秒'],
+                answer: 1,
+                analysis: 'STM-1帧长2430 B，速率155.52 Mbit/s，帧频8000帧/秒，与PCM采样一致。'
+            },
+            {
+                id: 92,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列调制方式中，抗噪性能最好的是？',
+                options: ['64QAM', 'BPSK', '16QAM', '8PSK'],
+                answer: 1,
+                analysis: 'BPSK星座点间距最大，误码率最低，抗噪最优。'
+            },
+            {
+                id: 93,
+                type: 'single',
+                chapter: '移动通信',
+                question: '在LTE中，用于随机接入的前导序列基于？',
+                options: ['Zadoff-Chu序列', 'Gold序列', 'Walsh码', 'm序列'],
+                answer: 0,
+                analysis: 'ZC序列具有恒定包络、零自相关旁瓣，适合随机接入。'
+            },
+            {
+                id: 94,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列哪项指标最能直接反映数字通信系统的有效性？',
+                options: ['误码率', '频带利用率', '信噪比', '抖动容限'],
+                answer: 1,
+                analysis: '频带利用率单位bit/s/Hz，直接衡量单位带宽传输比特效率。'
+            },
+            {
+                id: 95,
+                type: 'single',
+                chapter: '数据通信',
+                question: '在IP承载网中，区分服务（DiffServ）使用IPv4首部的哪个字段？',
+                options: ['版本字段', '服务类型字段', '标识字段', '选项字段'],
+                answer: 1,
+                analysis: 'ToS字段重新定义为DS字段，用于DiffServ标记。'
+            },
+            {
+                id: 96,
+                type: 'single',
+                chapter: '传输系统',
+                question: '下列哪类光纤最适合于10 Gbit/s以上单模传输且无需色散补偿？',
+                options: ['G.652.D', 'G.655', 'G.651', 'G.657'],
+                answer: 1,
+                analysis: 'G.655非零色散位移光纤，色散足够抑制四波混频，又避免过大色散。'
+            },
+            {
+                id: 97,
+                type: 'single',
+                chapter: '移动通信',
+                question: '在5G超密集组网（UDN）中，解决小区间干扰的主流方案是？',
+                options: ['提升发射功率', '小区休眠', '频分复用', '波束协调'],
+                answer: 3,
+                analysis: '波束协调通过窄波束指向，降低小区间干扰，提升信干比。'
+            },
+            {
+                id: 98,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列关于Shannon公式的表述，正确的是？',
+                options: ['信道容量与带宽成正比，与信噪比无关', '当信噪比趋于0时容量趋于无穷', '容量随信噪比增加而线性增加', '带宽与信噪比可互换'],
+                answer: 3,
+                analysis: 'Shannon公式C=B log2(1+S/N)，带宽与信噪比可互换，体现带宽效率与功率效率折中。'
+            },
+            {
+                id: 99,
+                type: 'single',
+                chapter: '数据通信',
+                question: '在TCP三次握手过程中，第二次握手报文段标志位为？',
+                options: ['SYN', 'SYN+ACK', 'ACK', 'FIN'],
+                answer: 1,
+                analysis: '第二次握手服务器回送SYN+ACK。'
+            },
+            {
+                id: 100,
+                type: 'single',
+                chapter: '数据通信',
+                question: '下列哪项技术可实现以太网链路毫秒级保护倒换？',
+                options: ['STP', 'LACP', 'ERPS', 'LLDP'],
+                answer: 2,
+                analysis: 'ERPS（G.8032）环网保护，倒换时间≤50 ms。'
+            },
+            {
+                id: 101,
+                type: 'multi',
+                chapter: '通信基础',
+                question: '以下哪些因素会影响无线通信信号的传播距离？',
+                options: ['信号频率', '发射功率', '传播介质', '天气状况', '接收器灵敏度'],
+                answer: [0, 1, 2, 3, 4],
+                analysis: '信号频率、发射功率、传播介质、天气状况和接收器灵敏度都会影响无线通信信号的传播距离。'
+            },
+            {
+                id: 102,
+                type: 'multi',
+                chapter: '数据通信',
+                question: '在TCP/IP协议栈中，以下哪些协议属于应用层？',
+                options: ['IP', 'TCP', 'UDP', 'HTTP', 'FTP'],
+                answer: [3, 4],
+                analysis: 'HTTP和FTP属于应用层协议，IP属于网络层，TCP和UDP属于传输层。'
+            },
+            {
+                id: 103,
+                type: 'multi',
+                chapter: '移动通信',
+                question: '以下哪些技术被用于提高无线网络的容量和覆盖范围？',
+                options: ['MIMO', 'OFDM', 'CDMA', 'TDMA', '载波聚合'],
+                answer: [0, 1, 2, 3, 4],
+                analysis: 'MIMO、OFDM、CDMA、TDMA和载波聚合都可用于提高无线网络的容量和覆盖范围。'
+            },
+            {
+                id: 104,
+                type: 'multi',
+                chapter: '传输系统',
+                question: '以下哪些是光纤通信系统的组成部分？',
+                options: ['光发射机', '光接收机', '光纤', '光调制器', '光放大器'],
+                answer: [0, 1, 2, 3, 4],
+                analysis: '光发射机、光接收机、光纤、光调制器和光放大器都是光纤通信系统的组成部分。'
+            },
+            {
+                id: 105,
+                type: 'multi',
+                chapter: '通信基础',
+                question: '以下哪些因素会影响数字信号的传输质量？',
+                options: ['信号噪声比', '信号带宽', '传输介质', '信号调制方式', '传输距离'],
+                answer: [0, 1, 2, 3, 4],
+                analysis: '信号噪声比、信号带宽、传输介质、信号调制方式和传输距离都会影响数字信号的传输质量。'
+            },
+            {
+                id: 106,
+                type: 'judge',
+                chapter: '传输系统',
+                question: '光纤通信中的光缆是单模光纤和多模光纤的总称。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '光缆是由单模或多模光纤组成的，是光纤的总称。'
+            },
+            {
+                id: 107,
+                type: 'judge',
+                chapter: '数据通信',
+                question: 'TCP协议是一种面向连接的协议，而UDP协议是一种无连接的协议。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: 'TCP是面向连接的可靠传输协议，UDP是无连接的不可靠传输协议。'
+            },
+            {
+                id: 108,
+                type: 'judge',
+                chapter: '接入网',
+                question: '无线局域网中，802.11a标准支持的最高数据传输速率低于802.11g标准。',
+                options: ['正确', '错误'],
+                answer: 1,
+                analysis: '802.11a支持最高54Mbps，802.11g也支持最高54Mbps，两者速率相同。'
+            },
+            {
+                id: 109,
+                type: 'judge',
+                chapter: '传输系统',
+                question: '在SDH（同步数字体系）中，STM-1的传输速率是2.048Mbps。',
+                options: ['正确', '错误'],
+                answer: 1,
+                analysis: 'STM-1的标准传输速率是155.520 Mbit/s，2.048Mbps是E1的速率。'
+            },
+            {
+                id: 110,
+                type: 'judge',
+                chapter: '传输系统',
+                question: '光纤通信中的衰减是指信号在传输过程中由于光纤本身的性质而导致的信号强度减小。',
+                options: ['正确', '错误'],
+                answer: 0,
+                analysis: '光纤衰减主要包括材料吸收损耗和散射损耗，导致信号强度随传输距离减小。'
+            },
+            {
+                id: 111,
+                type: 'single',
+                chapter: '数据通信',
+                question: '在OSPF协议中，标识一台路由器的唯一参数是？',
+                options: ['接口IP', 'Router ID', '区域号', '掩码'],
+                answer: 1,
+                analysis: 'Router ID用32位无符号整数唯一标识自治系统内路由器。'
+            },
+            {
+                id: 112,
+                type: 'single',
+                chapter: '数据通信',
+                question: '下列关于以太网VLAN的描述，正确的是？',
+                options: ['默认VLAN ID为0', 'VLAN可以跨越多个交换机', 'VLAN只能在同一交换机内', 'VLAN不能提高网络安全性'],
+                answer: 1,
+                analysis: 'VLAN可以跨越多个交换机，通过Trunk链路实现VLAN信息的传递。'
+            },
+            {
+                id: 113,
+                type: 'single',
+                chapter: '通信基础',
+                question: '通信科技职业具有高度的什么特性？',
+                options: ['独立性', '集中统一性', '分散性', '自主性'],
+                answer: 1,
+                analysis: '从通信科技全程全网、联合作业的劳动过程看，通信科技职业具有高度的集中统一性。'
+            },
+            {
+                id: 114,
+                type: 'single',
+                chapter: '通信基础',
+                question: '电信用户逾期不交纳电信费用的，电信业务经营者可以按照所欠费用每日加收多少比例的违约金？',
+                options: ['1‰', '3‰', '5‰', '10‰'],
+                answer: 1,
+                analysis: '根据《电信条例》，电信用户逾期不交纳电信费用的，按所欠费用每日加收3‰的违约金。'
+            },
+            {
+                id: 115,
+                type: 'single',
+                chapter: '通信基础',
+                question: '电信用户申诉后，收到申诉的机关必须在多少日内做出答复？',
+                options: ['15日', '30日', '45日', '60日'],
+                answer: 1,
+                analysis: '电信用户申诉后，收到申诉的机关必须自收到申诉之日起30日内向申诉者做出答复。'
+            },
+            {
+                id: 116,
+                type: 'single',
+                chapter: '通信基础',
+                question: '《电信业务分类目录（2015年版）》规定，增值电信业务的代码是？',
+                options: ['A', 'B', 'C', 'D'],
+                answer: 1,
+                analysis: '《电信业务分类目录（2015年版）》规定，基础电信业务代码为A，增值电信业务代码为B。'
+            },
+            {
+                id: 117,
+                type: 'single',
+                chapter: '通信基础',
+                question: '《计算机信息系统安全保护等级划分准则》规定，计算机信息系统安全保护等级中的第一级是什么？',
+                options: ['系统审计保护级', '用户自主保护级', '安全标记保护级', '结构化保护级'],
+                answer: 1,
+                analysis: '第一级是用户自主保护级，属于最低级别的安全保护。'
+            },
+            {
+                id: 118,
+                type: 'single',
+                chapter: '通信基础',
+                question: '香农公式C=Blog2(1+S/N)中的B是指？',
+                options: ['信道带宽', '信号功率', '噪声功率', '信噪比'],
+                answer: 0,
+                analysis: '香农公式中的B是信道带宽，单位为Hz。'
+            },
+            {
+                id: 119,
+                type: 'single',
+                chapter: '通信基础',
+                question: '下列几种同步方式中，主从同步是指？',
+                options: ['网内各节点时钟自由运行', '在同步网内设一个高精度的基准时钟，网内各节点时钟均受控于该基准时钟', '各节点时钟相互同步', '使用GPS时钟'],
+                answer: 1,
+                analysis: '主从同步是指在同步网内设一个高精度的基准时钟，网内各节点时钟均受控于该基准时钟。'
+            },
+            {
+                id: 120,
+                type: 'single',
+                chapter: '数据通信',
+                question: 'TCP/IP体系结构中，网络层的主要任务是？',
+                options: ['进程间通信', '保证分组从源节点到目的节点之间的正确传送', '物理介质传输', '应用程序接口'],
+                answer: 1,
+                analysis: '网络层负责分组的路由转发，保证分组从源节点到目的节点之间的正确传送。'
             }
         ];
 
@@ -1426,6 +2137,10 @@
                 renderWrongQuestions();
             } else if (tabName === 'review') {
                 renderReview();
+            } else if (tabName === 'knowledge') {
+                renderKnowledge();
+            } else if (tabName === 'guide') {
+                renderGuide();
             }
         }
 
@@ -1676,4 +2391,331 @@
                     <li class="${optionClass}" onclick="selectExamOption(${index})">
                         <span class="option-letter">${letters[index]}</span>
                         <span class="option-text">${option}</span>
-                    </li
+                    </li>
+                `;
+            });
+
+            document.getElementById('exam-container').innerHTML += `
+                <div class="question-card">
+                    <div class="question-header">
+                        <span class="question-type ${typeClass}">${typeLabel}</span>
+                        <span class="question-number">章节：${question.chapter}</span>
+                    </div>
+                    <div class="question-text">${question.id}. ${question.question}</div>
+                    <ul class="options-list">${optionsHtml}</ul>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="prevExamQuestion()" ${currentQuestionIndex === 0 ? 'disabled' : ''}>上一题</button>
+                        ${currentQuestionIndex === examQuestions.length - 1 ? 
+                            '<button class="btn btn-danger" onclick="finishExam()">交卷</button>' :
+                            '<button class="btn btn-primary" onclick="nextExamQuestion()">下一题</button>'
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectExamOption(index) {
+            const question = examQuestions[currentQuestionIndex];
+            if (question.type === 'multi') {
+                if (!examAnswers[question.id]) {
+                    examAnswers[question.id] = [];
+                }
+                const idx = examAnswers[question.id].indexOf(index);
+                if (idx > -1) {
+                    examAnswers[question.id].splice(idx, 1);
+                } else {
+                    examAnswers[question.id].push(index);
+                }
+            } else {
+                examAnswers[question.id] = index;
+            }
+            renderExamQuestion();
+        }
+
+        function prevExamQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderExamQuestion();
+            }
+        }
+
+        function nextExamQuestion() {
+            if (currentQuestionIndex < examQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderExamQuestion();
+            }
+        }
+
+        function finishExam() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            let correctCount = 0;
+            let wrongQuestions = [];
+            
+            examQuestions.forEach(question => {
+                const userAnswer = examAnswers[question.id];
+                const isCorrect = Array.isArray(question.answer)
+                    ? arraysEqual([...userAnswer].sort(), [...question.answer].sort())
+                    : userAnswer === question.answer;
+                
+                if (isCorrect) {
+                    correctCount++;
+                } else {
+                    wrongQuestions.push(question);
+                }
+                
+                userAnswers[question.id] = userAnswer;
+            });
+            
+            saveProgress();
+            updateStats();
+            
+            const score = Math.round((correctCount / examQuestions.length) * 100);
+            
+            document.getElementById('exam-container').style.display = 'none';
+            document.getElementById('exam-result').style.display = 'block';
+            document.getElementById('start-exam-btn').style.display = 'block';
+            
+            document.getElementById('exam-result').innerHTML = `
+                <div class="result-card">
+                    <div class="result-score">${score}</div>
+                    <div class="result-text">${score >= 60 ? '🎉 恭喜通过！' : '💪 继续努力！'}</div>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <div class="detail-value">${correctCount}</div>
+                            <div class="detail-label">正确</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${examQuestions.length - correctCount}</div>
+                            <div class="detail-label">错误</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${Math.round((correctCount / examQuestions.length) * 100)}%</div>
+                            <div class="detail-label">正确率</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="startExam()">再考一次</button>
+                </div>
+            `;
+        }
+
+        function renderWrongQuestions() {
+            const wrongQuestions = getWrongQuestions();
+            
+            if (wrongQuestions.length === 0) {
+                document.getElementById('wrong-container').innerHTML = `
+                    <div class="empty-state">
+                        <div>🎉</div>
+                        <p>暂无错题，继续保持！</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<ul class="wrong-list">';
+            wrongQuestions.forEach((question, index) => {
+                const userAnswer = userAnswers[question.id];
+                const correctAnswerText = Array.isArray(question.answer)
+                    ? question.answer.map(i => ['A', 'B', 'C', 'D', 'E', 'F'][i]).join(', ')
+                    : ['A', 'B', 'C', 'D', 'E', 'F'][question.answer];
+                
+                html += `
+                    <li class="wrong-item">
+                        <strong>${index + 1}. ${question.question}</strong>
+                        <p style="margin-top: 5px; color: #666; font-size: 14px;">
+                            你的答案：${userAnswer !== undefined ? (Array.isArray(userAnswer) ? userAnswer.map(i => ['A', 'B', 'C', 'D', 'E', 'F'][i]).join(', ') : ['A', 'B', 'C', 'D', 'E', 'F'][userAnswer]) : '未作答'} | 
+                            正确答案：<span style="color: #66bb6a;">${correctAnswerText}</span>
+                        </p>
+                        <p style="margin-top: 5px; color: #888; font-size: 13px;">${question.analysis}</p>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            
+            document.getElementById('wrong-container').innerHTML = html;
+        }
+
+        function clearWrongQuestions() {
+            if (confirm('确定要清空错题集吗？')) {
+                localStorage.removeItem('communication_exam_progress');
+                userAnswers = {};
+                updateStats();
+                renderWrongQuestions();
+            }
+        }
+
+        function renderReview() {
+            const chapters = {};
+            allQuestions.forEach(question => {
+                if (!chapters[question.chapter]) {
+                    chapters[question.chapter] = { total: 0, done: 0, correct: 0 };
+                }
+                chapters[question.chapter].total++;
+                
+                const userAnswer = userAnswers[question.id];
+                if (userAnswer !== undefined) {
+                    chapters[question.chapter].done++;
+                    const isCorrect = Array.isArray(question.answer)
+                        ? arraysEqual([...userAnswer].sort(), [...question.answer].sort())
+                        : userAnswer === question.answer;
+                    if (isCorrect) {
+                        chapters[question.chapter].correct++;
+                    }
+                }
+            });
+            
+            let html = '';
+            for (const [chapter, stats] of Object.entries(chapters)) {
+                const accuracy = stats.done > 0 ? Math.round((stats.correct / stats.done) * 100) : 0;
+                const progress = (stats.done / stats.total) * 100;
+                
+                html += `
+                    <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="color: #333;">${chapter}</h4>
+                            <span style="color: #667eea; font-weight: bold;">${stats.done}/${stats.total}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 14px;">
+                            <span style="color: #666;">正确率：${accuracy}%</span>
+                            <span style="color: #66bb6a;">正确：${stats.correct}</span>
+                            <span style="color: #ef5350;">错误：${stats.done - stats.correct}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('review-container').innerHTML = html;
+        }
+
+        let knowledgeFilter = 'all';
+
+        function filterKnowledge(type) {
+            knowledgeFilter = type;
+            document.querySelectorAll('#tab-knowledge .filter-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            renderKnowledge();
+        }
+
+        function renderKnowledge() {
+            let filtered = knowledgePoints;
+            if (knowledgeFilter === '基础') {
+                filtered = knowledgePoints.filter(k => k.category === '基础');
+            } else if (knowledgeFilter === '传输') {
+                filtered = knowledgePoints.filter(k => k.category === '传输');
+            } else if (knowledgeFilter === '交换') {
+                filtered = knowledgePoints.filter(k => k.category === '交换');
+            } else if (knowledgeFilter === '接入') {
+                filtered = knowledgePoints.filter(k => k.category === '接入');
+            } else if (knowledgeFilter === '移动') {
+                filtered = knowledgePoints.filter(k => k.category === '移动');
+            } else if (knowledgeFilter === '数据') {
+                filtered = knowledgePoints.filter(k => k.category === '数据');
+            }
+
+            let html = '';
+            filtered.forEach(kp => {
+                const keyPointsHtml = kp.keyPoints.map(kp => `<li>• ${kp}</li>`).join('');
+                
+                html += `
+                    <div style="background: #fff; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-left: 4px solid #667eea;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="color: #333; font-size: 18px; margin: 0;">📚 ${kp.title}</h4>
+                            <span style="background: #e3f2fd; color: #1565c0; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${kp.chapter}</span>
+                        </div>
+                        <p style="color: #555; line-height: 1.8; margin-bottom: 15px; font-size: 15px;">${kp.content}</p>
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
+                            <h5 style="color: #333; margin-bottom: 10px; font-size: 14px;">✨ 重点要点</h5>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                ${keyPointsHtml}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('knowledge-container').innerHTML = html;
+        }
+
+        function renderGuide() {
+            let html = '';
+
+            html += `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 30px; margin-bottom: 25px;">
+                    <h3 style="font-size: 22px; margin-bottom: 15px;">${examGuide.overview.title}</h3>
+                    <p style="line-height: 1.8; font-size: 16px; opacity: 0.95;">${examGuide.overview.content}</p>
+                </div>
+
+                <h3 style="color: #333; margin-bottom: 20px; font-size: 20px;">📖 考试科目</h3>
+            `;
+
+            examGuide.subjects.forEach(subject => {
+                const typesHtml = subject.questionTypes.map(t => `<span style="background: #e3f2fd; color: #1565c0; padding: 4px 10px; border-radius: 15px; font-size: 12px; margin-right: 8px;">${t}</span>`).join('');
+                
+                html += `
+                    <div style="background: #fff; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-left: 4px solid #4caf50;">
+                        <h4 style="color: #333; font-size: 18px; margin-bottom: 10px;">📝 ${subject.name}</h4>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 10px;"><strong>简介：</strong>${subject.description}</p>
+                        <p style="color: #555; line-height: 1.7; margin-bottom: 15px;">${subject.content}</p>
+                        <div style="margin-top: 15px;">
+                            <span style="color: #666; font-size: 14px; font-weight: bold;">考查题型：</span>
+                            ${typesHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                <h3 style="color: #333; margin-bottom: 20px; font-size: 20px;">🎯 题型解读</h3>
+            `;
+
+            examGuide.questionTypes.forEach(qType => {
+                let examplesHtml = '';
+                qType.examples.forEach((ex, idx) => {
+                    examplesHtml += `
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
+                            <p style="color: #333; font-weight: 500; margin-bottom: 8px;">${idx + 1}. ${ex.question}</p>
+                            <p style="color: #66bb6a; font-weight: bold; font-size: 14px;">答案：${ex.answer}</p>
+                            <p style="color: #888; font-size: 13px; margin-top: 5px;">解析：${ex.analysis}</p>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div style="background: #fff; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-left: 4px solid #ff9800;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="color: #333; font-size: 18px;">📌 ${qType.type}</h4>
+                            <span style="background: #fff3e0; color: #ef6c00; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${qType.description}</span>
+                        </div>
+                        <div style="background: #fff3e0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                            <h5 style="color: #e65100; margin-bottom: 8px; font-size: 14px;">💡 答题技巧</h5>
+                            <p style="color: #666; font-size: 14px; line-height: 1.7;">${qType.tips}</p>
+                        </div>
+                        <h5 style="color: #333; margin-bottom: 10px; font-size: 14px;">📝 示例</h5>
+                        ${examplesHtml}
+                    </div>
+                `;
+            });
+
+            html += `
+                <h3 style="color: #333; margin-bottom: 20px; font-size: 20px;">📋 备考建议</h3>
+            `;
+
+            examGuide.preparationTips.forEach(tip => {
+                html += `
+                    <div style="background: #e8f5e9; border-radius: 10px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #66bb6a;">
+                        <h4 style="color: #2e7d32; font-size: 16px; margin-bottom: 10px;">✅ ${tip.title}</h4>
+                        <p style="color: #555; line-height: 1.7;">${tip.content}</p>
+                    </div>
+                `;
+            });
+
+            document.getElementById('guide-container').innerHTML = html;
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
